@@ -701,8 +701,9 @@ function savePos(){try{localStorage.setItem(POS,JSON.stringify({w:idx,p:pidx}))}
 
 // голос
 var trVoice=null;
-function pickVoice(){var v=speechSynthesis.getVoices();trVoice=v.find(function(x){return /^tr/i.test(x.lang)&&/google/i.test(x.name)})||v.find(function(x){return /^tr/i.test(x.lang)})||null;
-  document.getElementById('vwarn').hidden=!!trVoice||!v.length}
+function pickVoice(){var v=speechSynthesis.getVoices();trVoice=v.find(function(x){return /^tr/i.test(x.lang)&&/google/i.test(x.name)})||v.find(function(x){return /^tr/i.test(x.lang)})||null}
+// В браузере предупреждение «нет турецкого голоса» не показываем: список голосов бывает неполным, а турецкий
+// всё равно звучит (пользователь, 16.11.2026: «голос есть, всё проходит»). В APK проверка честная — через телефон.
 // в программе для Android голос — синтезатор телефона через мост Android.speak (в WebView нет speechSynthesis)
 var IN_APP=!!window.Android;
 // сайт-приложение: офлайн-кэш только на сайте (в APK страница — файл, там не нужен и не работает)
