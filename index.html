@@ -721,7 +721,14 @@ window.onTts=function(ok){var w=document.getElementById('vwarn');
   document.getElementById('inst').onclick=function(){Android.installVoice()}};
 if(IN_APP){setTimeout(function(){window.onTts(Android.hasTurkish())},2500)}
 else if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
-function speak(t){if(IN_APP){Android.speak(t);return}if(!('speechSynthesis' in window))return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang='tr-TR';if(trVoice)u.voice=trVoice;u.rate=.8;speechSynthesis.speak(u)}
+// Озвучка — записи голоса Ахмета (assets/voice, web/build_voice.js; пользователь 16.11.2026: «нормальным голосом, медленно»).
+// Нет файла или не играет — запасной голос телефона/браузера, а не тишина. Имя файла: kapı zili → kapi_zili
+function vslug(t){return t.toLocaleLowerCase('tr').replace(/[şçğıöüâîû]/g,function(c){return {'ş':'s','ç':'c','ğ':'g','ı':'i','ö':'o','ü':'u','â':'a','î':'i','û':'u'}[c]}).replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')}
+var VA=null;
+function speak(t){var done=false;function fb(){if(!done){done=true;speakTTS(t)}}
+  try{if(!VA)VA=new Audio();VA.pause();VA.onerror=fb;VA.src='voice/'+vslug(t)+'.mp3';
+    var p=VA.play();if(p&&p.catch)p.catch(function(e){if(!e||e.name!=='AbortError')fb()})}catch(e){fb()}}
+function speakTTS(t){if(IN_APP){Android.speak(t);return}if(!('speechSynthesis' in window))return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang='tr-TR';if(trVoice)u.voice=trVoice;u.rate=.8;speechSynthesis.speak(u)}
 
 // Звук перелистывания (пользователь, 16.11.2026: «смешной звук на „Дальше“»). Выбран «вжух» — фломастер по бумаге;
 // варианты — design/sounds/index.html. Синтез Web Audio, без файлов. Крайние случаи: нет Web Audio — тихо;
