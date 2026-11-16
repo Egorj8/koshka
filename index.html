@@ -37,6 +37,7 @@ button{font:inherit;cursor:pointer;color:var(--ink)}
 .wrap{max-width:560px;margin:0 auto;padding:12px 16px 30px}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
 h1{font:900 24px/1.2 "Nunito",system-ui,sans-serif;margin:0;background:linear-gradient(transparent 58%,var(--lemon) 58%,var(--lemon) 92%,transparent 92%);padding:0 4px;transform:rotate(-1.2deg);white-space:nowrap}
+.sfxbtn{border:2px solid var(--ink);background:var(--paper);border-radius:10px;padding:2px 10px;font-weight:800}
 .count{font-size:14px;color:var(--mute);font-weight:700;text-align:right;line-height:1.3}
 .count b{display:block;font-size:16px;font-weight:900;color:var(--ink);white-space:nowrap}
 /* сколько пролистано: полоска «фломастером» под заголовком (пользователь, 16.11.2026) */
@@ -115,6 +116,7 @@ h1{font:900 24px/1.2 "Nunito",system-ui,sans-serif;margin:0;background:linear-gr
   <main id="app"></main>
   <p class="note">Тайна раскрыта: магистр Йода — турок. Он говорит задом наперёд — и турки тоже. Во «Фразах» строка «Как сказал бы Йода» — это и есть турецкий порядок слов.</p>
   <p class="note">«Проверить себя» проверяет то, что вы открывали последним: слова или фразы. Подсказка исчезает, когда вы узнали слово или фразу 3 раза подряд.</p>
+  <p class="note">Звук перелистывания «вжух»: <button type="button" class="sfxbtn" id="sfxbtn"></button></p>
   <p class="note">Слова возвращаются сами: через день, 3 дня, неделю, 2 недели и месяц после встречи — среди рисунков появится «Вспомните?». Забыли — не страшно: слово вернётся завтра, с подсказкой.</p>
 </div>
 
@@ -638,7 +640,20 @@ var P = [
   {p:[['Biraz','немного'],['daha','ещё'],['çay?','чай']], nat:[['Ещё',1],['немного',0],['чаю?',2]], ru:'бираз даха чай', sc:'🍵🫖',
    hook:'Коля за чаем — уже пятый тюльпанчик. «Ещё разок?» Отказ не принимается.', when:'В гостях у турок — всегда.'},
   {p:[['Belki','может быть'],['yarın,','завтра'],['inşallah.','даст бог']], nat:[['Может быть,',0],['завтра,',1],['даст бог.',2]], ru:'белки ярын, иншаллах', sc:'🐿️🎡',
-   hook:'Белки на ярмарке гадают на ромашке: может, завтра, иншаллах.', when:'Мастер, сосед, чиновник — на «когда сделаете?».'}
+   hook:'Белки на ярмарке гадают на ромашке: может, завтра, иншаллах.', when:'Мастер, сосед, чиновник — на «когда сделаете?».'},
+  // фразы до сотни (16.11.2026)
+  {p:[['Spor','спорт'],['ayakkabı','обувь'],['+lı','с'],['kedi','кошка']], nat:[['Кошка',3],['в',2],['кедах',1]], ru:'спор аяккабылы кеди', sc:'🐈👟',
+   hook:'Йода сказал бы: «Спорт-обувь-с кошка». Та самая — с первой картинки.', when:'Так по-турецки называется эта программа.'},
+  {p:[['Ben','я'],['kahve,','кофе'],['sen','ты'],['çay?','чай']], nat:[['Мне',0],['кофе,',1],['тебе',2],['чай?',3]], ru:'бен кахве, сен чай', sc:'☕🍵',
+   hook:'Бен Кеноби — кофе, сенсей — чай. Официант-бурундук всё запомнил.', when:'Заказ в кафе на двоих.'},
+  {p:[['Biz','мы'],['komşu','сосед'],['+yuz.','(мы есть)']], nat:[['Мы',0],['соседи.',1]], ru:'биз комшуюз', sc:'🦬🏠',
+   hook:'Бизоны за стенкой топают — «Кому шум?!» — «Мы соседи!»', when:'Знакомство в подъезде.'},
+  {p:[['Durak','остановка'],['nerede?','где']], nat:[['Где',1],['остановка?',0]], ru:'дурак нэрэдэ', sc:'🚏🥬',
+   hook:'Дурак ищет остановку с редиской в руке: «Не редиска?»', when:'Потерялись в городе.'},
+  {p:[['Neden','почему'],['yok?','нет']], nat:[['Почему',0],['нет?',1]], ru:'нэдэн ёк', sc:'🎩🙅',
+   hook:'Фокусник: «Ёк!» — «Почему?» — «Не дам!»', when:'В магазине нет товара, в кассе нет сдачи.'},
+  {p:[['Hiç','совсем'],['para','деньги'],['yok.','нет']], nat:[['Денег',1],['совсем',0],['нет.',2]], ru:'хич пара ёк', sc:'👍🪙',
+   hook:'Хичхайкер голосует — ни одной пары монет, совсем.', when:'Честно — на рынке, другу, себе.'}
 ];
 // у кусочков с «(…)» нет своего русского слова — это вагончик-окончание
 var CL=['c0','c1','c2','c3','c4'];
@@ -700,6 +715,24 @@ if(IN_APP){setTimeout(function(){window.onTts(Android.hasTurkish())},2500)}
 else if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
 function speak(t){if(IN_APP){Android.speak(t);return}if(!('speechSynthesis' in window))return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang='tr-TR';if(trVoice)u.voice=trVoice;u.rate=.8;speechSynthesis.speak(u)}
 
+// Звук перелистывания (пользователь, 16.11.2026: «смешной звук на „Дальше“»). Выбран «вжух» — фломастер по бумаге;
+// варианты — design/sounds/index.html. Синтез Web Audio, без файлов. Крайние случаи: нет Web Audio — тихо;
+// звук выключен — тихо (выбор помнится); турецкое слово звучит после «вжуха», не поверх.
+var SFX_KEY='tk-sfx', sfxOn=true, AC=null;
+try{sfxOn=localStorage.getItem(SFX_KEY)!=='0'}catch(e){}
+function sfx(){if(!sfxOn)return 0;try{
+  if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();
+  var c=AC,t=c.currentTime,b=c.createBuffer(1,Math.ceil(c.sampleRate*.3),c.sampleRate),d=b.getChannelData(0);
+  for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  var n=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();n.buffer=b;
+  f.type='bandpass';f.Q.value=3;f.frequency.setValueAtTime(500,t);f.frequency.exponentialRampToValueAtTime(4500,t+.22);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.7,t+.04);g.gain.exponentialRampToValueAtTime(.0001,t+.26);
+  n.connect(f);f.connect(g);g.connect(c.destination);n.start(t);n.stop(t+.3);return 260}catch(e){return 0}}
+// «вжух», потом турецкое слово
+function sfxThen(fn){var ms=sfx();if(ms)setTimeout(fn,ms);else fn()}
+function sfxLabel(){var b=document.getElementById('sfxbtn');if(b)b.textContent=sfxOn?'🔊 включён':'🔇 выключен'}
+document.getElementById('sfxbtn').onclick=function(){sfxOn=!sfxOn;try{localStorage.setItem(SFX_KEY,sfxOn?'1':'0')}catch(e){}sfxLabel();if(sfxOn)sfx()};
+sfxLabel();
 var mode='learn', set='w', app=document.getElementById('app');
 var _pos=loadPos(), idx=_pos.w, pidx=_pos.p, steps=0;
 function esc(s){return s.replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -710,6 +743,20 @@ function count(){var L=set==='w'?W:P,k=L.filter(function(_,i){return known(set==
     c.innerHTML='<b>'+(set==='w'?'Слово ':'Фраза ')+(pos+1)+' из '+L.length+'</b>ещё '+(L.length-pos-1)+(k?' · знаете '+k:'')+(d?' · вспомнить '+d:'');
     tr.hidden=false;document.getElementById('trackfill').style.width=((pos+1)/L.length*100).toFixed(1)+'%'}
   else{c.textContent=(set==='w'?'Слов':'Фраз')+' узнаёте: '+k+' из '+L.length+(d?' · вспомнить: '+d:'');tr.hidden=true}}
+// Ударение в произношении (план: «сначала звук», 16.11.2026). В турецком ударение обычно на последнем слоге —
+// ставим само; исключения (имена-обращения, наречия, дни недели, заимствования) — списком. Проверить у носителя.
+var STRESS={'merhaba':'мэ́рхаба','lütfen':'лю́тфен','anne':'а́ннэ','baba':'ба́ба','masa':'ма́са','oda':'о́да','şimdi':'ши́мди',
+  'nerede':'нэ́рэдэ','nasıl':'на́сыл','hangi':'ха́нги','belki':'бе́лки','sonra':'со́нра','hemen':'хе́мен','yarın':'я́рын',
+  'bugün':'бу́гюн','ama':'а́ма','çünkü':'чю́нкю','neden':'нэ́дэн','burada':'бу́рада','orada':'о́рада','evet':'э́вэт',
+  'hayır':'ха́йыр','pazartesi':'паза́ртеси','cumartesi':'джума́ртеси','perşembe':'перше́мбе','çarşamba':'чарша́мба',
+  'cuma':'джу́ма','affedersiniz':'аффеде́рсиниз','hoşça kal':'хо́шча ка́ль','buyurun':'бу́юрун','inşallah':'инша́ллах',
+  'maşallah':'ма́шаллах','domates':'дома́тэс','sandalye':'санда́лье','banyo':'ба́ньо','taksi':'та́кси','polis':'по́лис',
+  'doktor':'до́ктор','bira':'би́ра','banka':'ба́нка','kilo':'ки́ло','fatura':'фату́ра','kombi':'ко́мби','patron':'па́трон',
+  'abi':'а́би','abla':'а́бла','amca':'а́мджа','teyze':'те́йзе','dede':'дэ́дэ','nine':'ни́нэ'};
+function ruS(w){if(STRESS[w.tr])return STRESS[w.tr];
+  // по умолчанию — последняя гласная каждого слова (в односложных знак не нужен)
+  return w.ru.split(' ').map(function(x){var v=x.match(/[аеёиоуыэюя]/gi);if(!v||v.length<2)return x;
+    var i=x.search(/[аеёиоуыэюя][^аеёиоуыэюя]*$/i);return x.slice(0,i+1)+'\u0301'+x.slice(i+1)}).join(' ')}
 function phTr(x){return x.p.map(function(q,i){var t=q[0],glue=t[0]==='+';return (i&&!glue?' ':'')+'<span class="'+CL[i]+'">'+(glue?t.slice(1):t)+'</span>'}).join('')}
 function phPlain(x){return x.p.map(function(q,i){var t=q[0];return t[0]==='+'?t.slice(1):(i?' ':'')+t}).join('')}
 function phNat(x){return x.nat.map(function(q){return q[1]<0?q[0]:'<span class="'+CL[q[1]]+'">'+q[0]+'</span>'}).join(' ').replace(/ (?=<span[^>]*> —)/,'').replace(/ —/,' —')}
@@ -729,7 +776,7 @@ function phrases(){
   '<div class="nav"><button class="prev" type="button" id="prev">Назад</button><button class="next" type="button" id="next">Дальше</button></div>';
   document.getElementById('say').onclick=function(){speak(phPlain(x))};
   document.getElementById('prev').onclick=function(){pidx=(pidx+P.length-1)%P.length;phrases()};
-  document.getElementById('next').onclick=function(){pidx=(pidx+1)%P.length;phrases();speak(phPlain(P[pidx]))};
+  document.getElementById('next').onclick=function(){pidx=(pidx+1)%P.length;phrases();sfxThen(function(){speak(phPlain(P[pidx]))})};
   count();
 }
 function nextPQ(){
@@ -761,7 +808,7 @@ function learn(){
   app.innerHTML='<div class="card pop">'+
     pic(w)+
     '<p class="word" lang="tr">'+w.tr+'</p>'+
-    '<button class="say" type="button" id="say">🔊 «'+w.ru+'»</button>'+
+    '<button class="say" type="button" id="say">🔊 «'+ruS(w)+'»</button>'+
     '<p class="mean">'+w.m+'</p>'+
     '<div class="hook'+(gone?' gone':'')+'">'+(gone?'<div class="snd">Вы это слово уже узнаёте — подсказка убрана.</div><p>Показать: '+(s.mine?esc(s.mine):w.snd.replace(/<[^>]+>/g,''))+'</p>':hook)+'</div>'+
   '</div>'+
@@ -774,17 +821,17 @@ function learn(){
 // «Дальше»: через раз, если есть что вспомнить, вместо нового слова — карточка «Вспомните?»
 function forward(){steps++;var d=dueWords(Date.now()).filter(function(i){return i!==idx});
   if(steps%2===0&&d.length){recall(d[0]);return}
-  idx=(idx+1)%W.length;learn();speak(W[idx].tr)}
+  idx=(idx+1)%W.length;learn();sfxThen(function(){speak(W[idx].tr)})}
 // мягкое повторение: сначала звук и слово, картинка и смысл — после ответа; без оценок
 function recall(i){
   var w=W[i], k=wk(i), s=st(k);
   app.innerHTML='<div class="card pop"><p class="q">Вспомните?</p>'+
     '<p class="word" lang="tr">'+w.tr+'</p>'+
-    '<button class="say" type="button" id="say">🔊 «'+w.ru+'»</button>'+
+    '<button class="say" type="button" id="say">🔊 «'+ruS(w)+'»</button>'+
     '<div class="opts" id="ans"><button type="button" id="yes">Помню</button><button type="button" id="no">Не помню</button></div>'+
     '<div id="rev"></div></div>'+
     '<div class="nav"><button class="prev" type="button" id="prev">Назад</button><button class="next" type="button" id="next">Дальше</button></div>';
-  document.getElementById('say').onclick=function(){speak(w.tr)};speak(w.tr);
+  document.getElementById('say').onclick=function(){speak(w.tr)};sfxThen(function(){speak(w.tr)});
   function answer(ok){
     rpAnswer(s,ok,Date.now());if(!ok)s.streak=0;save();
     document.getElementById('ans').remove();
