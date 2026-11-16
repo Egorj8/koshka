@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Кошка в кедах</title>
+<!-- сайт-приложение: значок на главный экран (Android, iPhone), офлайн — web/build_web.py -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#FBF6EA">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Кошка в кедах">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;900&display=swap">
+<style>
+/* Интерфейс в духе рисунков «Тёмы» (15.11.2026): бумага, жирный чёрный контур фломастером,
+   яркие плоские цвета, кнопки «нарисованы от руки» (неровные скругления, чёрная тень-сдвиг). */
+:root{
+  --ink:#1d1d1d;      /* контур и текст */
+  --paper:#fffdf8;    /* карточки */
+  --desk:#fbf6ea;     /* фон */
+  --red:#ef3b36; --orange:#ff9f1c; --lemon:#ffd23f; --sky:#5cc8e0; --green:#3bb54a; --blue:#1b6fd1;
+  --mute:#6b6660;
+  --ok:#2c9a3c; --bad:#d8322d;
+  --hand:18px 28px 16px 30px / 28px 16px 26px 18px;   /* «кривое» скругление, как от руки */
+  --hand2:26px 14px 30px 16px / 16px 28px 14px 26px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--desk);color:var(--ink);font:600 17px/1.5 "Nunito",system-ui,sans-serif}
+button{font:inherit;cursor:pointer;color:var(--ink)}
+:focus-visible{outline:3px dashed var(--blue);outline-offset:3px}
+.wrap{max-width:560px;margin:0 auto;padding:12px 16px 30px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+h1{font:900 24px/1.2 "Nunito",system-ui,sans-serif;margin:0;background:linear-gradient(transparent 58%,var(--lemon) 58%,var(--lemon) 92%,transparent 92%);padding:0 4px;transform:rotate(-1.2deg);white-space:nowrap}
+.count{font-size:14px;color:var(--mute);font-weight:700;text-align:right;line-height:1.3}
+.count b{display:block;font-size:16px;font-weight:900;color:var(--ink);white-space:nowrap}
+/* сколько пролистано: полоска «фломастером» под заголовком (пользователь, 16.11.2026) */
+.track{height:8px;border:2px solid var(--ink);border-radius:6px;background:var(--paper);margin:-4px 0 12px;overflow:hidden}
+.track i{display:block;height:100%;background:var(--lemon);transition:width .25s}
+.track[hidden]{display:none}
+.tabs{display:flex;gap:8px;margin:0 0 14px}
+.tabs button{flex:1;border:3px solid var(--ink);background:var(--paper);font-weight:900;font-size:15px;line-height:1.2;padding:8px 4px;border-radius:var(--hand2);box-shadow:3px 3px 0 var(--ink)}
+.tabs button[aria-pressed="true"]{background:var(--lemon);transform:rotate(-1deg)}
+
+.card{background:var(--paper);border:3px solid var(--ink);border-radius:var(--hand);padding:16px 16px 18px;box-shadow:5px 6px 0 var(--ink)}
+/* рамка нарисована внутри рисунка (design/fonts/frame.py), вокруг — поле 14/300, чтобы подписи могли торчать за рамку */
+.pic{display:block;width:109.33%;max-width:none;aspect-ratio:328/268;margin:-10px -4.67% 4px;transform:rotate(-.6deg)}
+.scene{font-size:84px;line-height:1;text-align:center;letter-spacing:-.12em;padding:6px 0 14px;user-select:none}
+.word{font:900 clamp(38px,11vw,54px)/1.05 "Nunito",system-ui,sans-serif;margin:0;text-align:center;color:var(--ink)}
+.say{display:block;margin:8px auto 0;border:2.5px solid var(--ink);background:var(--sky);border-radius:var(--hand2);padding:5px 16px;font-size:17px;font-weight:800;box-shadow:2px 2px 0 var(--ink)}
+.mean{text-align:center;font-size:22px;font-weight:900;margin:8px 0 0;color:var(--blue)}
+.hook{margin:12px 0 0;padding:12px 14px;border:2.5px solid var(--ink);border-radius:var(--hand2);background:#fff3bf}
+.hook .snd{font-weight:900}
+.hook .snd mark{background:var(--lemon);padding:0 4px;border-radius:4px;box-shadow:0 0 0 2px var(--lemon)}
+.hook p{margin:4px 0 0}
+.hook.gone{background:#f1ede4;border-style:dashed;color:var(--mute)}
+.mine{margin-top:12px;display:flex;gap:8px}
+.mine input{flex:1;min-width:0;font:inherit;border:2.5px solid var(--ink);border-radius:var(--hand2);padding:8px 12px;background:#fff}
+.mine button{border:2.5px solid var(--ink);background:var(--green);color:#fff;border-radius:var(--hand2);padding:0 14px;font-weight:900;box-shadow:2px 2px 0 var(--ink)}
+.nav{display:flex;gap:12px;position:sticky;bottom:0;z-index:2;margin:14px -16px 0;padding:10px 16px 14px;background:var(--desk)}  /* «Назад/Дальше» всегда на экране */
+.nav button{flex:1;border:3px solid var(--ink);border-radius:var(--hand);padding:14px;font-weight:900;font-size:18px;box-shadow:4px 4px 0 var(--ink)}
+.nav button:active,.tabs button:active,.say:active,.opts button:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.prev{background:var(--paper)}
+.next{background:var(--red);color:#fff!important}
+.dots{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:16px}
+.dots i{width:11px;height:11px;border-radius:50% 45% 55% 48%;border:2px solid var(--ink);background:var(--paper)}
+.dots i.on{background:var(--lemon);transform:scale(1.3)}
+.dots i.done{background:var(--green)}
+
+/* проверка */
+.q{font-size:16px;font-weight:800;color:var(--mute);text-align:center;margin:0 0 8px}
+.opts{display:grid;gap:12px;margin-top:18px}
+.opts button{border:3px solid var(--ink);background:var(--paper);border-radius:var(--hand2);padding:13px 44px 13px 14px;font-weight:900;font-size:18px;text-align:left;box-shadow:3px 3px 0 var(--ink);position:relative}
+.opts button.right{background:#c8f0c4}
+.opts button.right::after{content:"✔";position:absolute;right:14px;top:50%;transform:translateY(-50%) rotate(-8deg);font-size:28px;color:var(--ok)}
+.opts button.wrong{background:#ffd0cc}
+.opts button.wrong::after{content:"✘";position:absolute;right:14px;top:50%;transform:translateY(-50%) rotate(6deg);font-size:28px;color:var(--bad)}
+.verdict{min-height:28px;text-align:center;font-weight:900;margin-top:14px}
+.note{font-size:14px;color:var(--mute);margin-top:22px}
+.voice-warn{background:#ffd0cc;border:2.5px solid var(--ink);border-radius:var(--hand2);padding:10px 14px;font-size:14px;margin-bottom:14px}
+.voice-warn button{border:2.5px solid var(--ink)!important;background:var(--red)!important;color:#fff!important}
+.ph-tr{font:900 clamp(30px,9vw,44px)/1.2 "Nunito",system-ui,sans-serif;text-align:center;margin:0}
+.ph-tr span{border-bottom:6px solid;padding:0 1px}
+.lay{margin:16px 0 0}
+.lay h3{font:900 13px/1 "Nunito",system-ui,sans-serif;color:var(--mute);margin:0 0 8px;letter-spacing:.02em}
+.chips{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.chips span{padding:4px 10px;border-radius:var(--hand2);font-weight:900;border:2px solid var(--ink)!important}
+.nat{font-size:21px;font-weight:900}
+.nat span{border-bottom:5px solid;padding:0 1px}
+.when{margin:16px 0 0;font-size:16px}
+.when b{display:block;font:900 13px/1 "Nunito",system-ui,sans-serif;color:var(--mute);margin:0 0 6px}
+.c0{color:#0b7d8a;border-color:var(--sky)!important}.chips .c0{background:#bfeaf3;color:var(--ink)}
+.c1{color:#c4410c;border-color:var(--orange)!important}.chips .c1{background:#ffd9a8;color:var(--ink)}
+.c2{color:#6a3fb0;border-color:#a98be6!important}.chips .c2{background:#e2d6fb;color:var(--ink)}
+.c4{color:#9a6a00;border-color:var(--lemon)!important}.chips .c4{background:#ffeb99;color:var(--ink)}
+.c3{color:#23802f;border-color:var(--green)!important}.chips .c3{background:#c8f0c4;color:var(--ink)}
+@media (prefers-reduced-motion:no-preference){.card.pop{animation:pop .25s ease-out}@keyframes pop{from{transform:scale(.96) rotate(-1deg);opacity:.6}}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1>Кошка в кедах</h1><span class="count" id="count"></span></header>
+  <div class="track" id="track" hidden><i id="trackfill"></i></div>
+  <div class="voice-warn" id="vwarn" hidden>В этом браузере нет турецкого голоса — слова не прозвучат. В Chrome на компьютере и на телефоне он обычно есть.</div>
+  <div class="tabs" role="group" aria-label="Режим">
+    <button type="button" id="tLearn" aria-pressed="true">Слова</button>
+    <button type="button" id="tPhr" aria-pressed="false">Фразы</button>
+    <button type="button" id="tCheck" aria-pressed="false">Проверить себя</button>
+  </div>
+  <main id="app"></main>
+  <p class="note">Тайна раскрыта: магистр Йода — турок. Он говорит задом наперёд — и турки тоже. Во «Фразах» строка «Как сказал бы Йода» — это и есть турецкий порядок слов.</p>
+  <p class="note">«Проверить себя» проверяет то, что вы открывали последним: слова или фразы. Подсказка исчезает, когда вы узнали слово или фразу 3 раза подряд.</p>
+  <p class="note">Слова возвращаются сами: через день, 3 дня, неделю, 2 недели и месяц после встречи — среди рисунков появится «Вспомните?». Забыли — не страшно: слово вернётся завтра, с подсказкой.</p>
+</div>
+
+<script>
+// Слова: турецкое, как звучит, значение, созвучие (что выделить), картинка-сцена, фраза-связка
+var W = [
+  {tr:'kedi', ru:'кеди', m:'кошка', snd:'<mark>кеды</mark>', sc:'🐈👟', hook:'Кошка в кедах.'},
+  {tr:'kapı', ru:'капы', m:'дверь', snd:'<mark>капает</mark>', sc:'🚪💧', hook:'С двери капает вода — кап-кап.'},
+  {tr:'elma', ru:'эльма', m:'яблоко', snd:'<mark>эль</mark>ф + <mark>ма</mark>ма', sc:'🧝🍎', hook:'Эльф стреляет из лука в яблоко на голове у мамы: эль-ма.'},
+  {tr:'güzel', ru:'гюзель', m:'красивый', snd:'<mark>гусь</mark>', sc:'🦢🪞', hook:'Гусь любуется собой в зеркале: какой красивый!'},
+  {tr:'gel', ru:'гель', m:'иди сюда', snd:'<mark>гель</mark>', sc:'🧴👉', hook:'Гель сам выползает из тюбика и ползёт к тебе: иди сюда!'},
+  {tr:'çok', ru:'чок', m:'очень', snd:'<mark>чок-чок</mark>', sc:'🥂😋', hook:'Чокнулись — чок! — очень вкусно!'},
+  {tr:'teşekkür ederim', ru:'тешекюр эдерим', m:'спасибо', snd:'<mark>тысяча кур</mark>', sc:'🐔🐔🙇', hook:'Тысяча кур кланяются и благодарят.'},
+  {tr:'su', ru:'су', m:'вода', snd:'<mark>су</mark>хо', sc:'🥵💧', hook:'Сухо во рту — дайте воды!'},
+  {tr:'ekmek', ru:'экмек', m:'хлеб', snd:'<mark>эх, мяк</mark>иш', sc:'🍞😌', hook:'Эх, мякиш у свежего хлеба!'},
+  {tr:'ayakkabı', ru:'аяккабы', m:'обувь', snd:'<mark>а я — каблук</mark>', sc:'👠🙋', hook:'Туфля гордо: «А я — каблук!»'},
+  {tr:'kitap', ru:'китап', m:'книга', snd:'<mark>кит</mark>', sc:'🐋📖', hook:'Кит читает книгу.'},
+  {tr:'araba', ru:'араба', m:'машина', snd:'<mark>араб</mark>ский скакун', sc:'🐎➡️🚗', hook:'Араб слез с арабского скакуна и пересел в машину.'},
+  {tr:'balık', ru:'балык', m:'рыба', snd:'<mark>балык</mark>', sc:'🐟🔪🍽️', hook:'Наш балык — нарезанная вяленая рыба на тарелке. У турок balık — любая рыба, хоть живая в море.'},
+  {tr:'yok', ru:'йок', m:'нет, нету', snd:'<mark>ёк</mark>', sc:'🤷', hook:'«Ёк — и нету!» Это и есть турецкое «нет».'},
+  {tr:'ev', ru:'эв', m:'дом', snd:'<mark>эй, в</mark> дом!', sc:'🏠🗣️', hook:'Мама кричит с порога: «Эй, в дом!» — ev.'},
+  {tr:'baba', ru:'баба', m:'папа', snd:'<mark>баба</mark>, но наоборот', sc:'👵➡️👨', hook:'Ждёшь бабушку, а приходит папа с усами. У турок baba — это папа.'},
+  {tr:'anne', ru:'аннэ', m:'мама', snd:'<mark>Аня</mark>', sc:'👩‍👦', hook:'Маму зовут Аня — anne.'},
+  {tr:'deniz', ru:'дэниз', m:'море', snd:'<mark>Денис</mark>', sc:'🧑🌊', hook:'Денис ушёл в море.'},
+  {tr:'ay', ru:'ай', m:'луна', snd:'<mark>ай!</mark>', sc:'😮🌙', hook:'Ай, какая луна!'},
+  {tr:'köpek', ru:'кёпек', m:'собака', snd:'<mark>копейка</mark>', sc:'🐕🪙', hook:'Собака нашла копейку и несёт в зубах.'},
+  {tr:'kuş', ru:'куш', m:'птица', snd:'<mark>куш</mark>', sc:'🐦💰', hook:'Птица сорвала куш — мешок денег.'},
+  {tr:'at', ru:'ат', m:'лошадь', snd:'<mark>ать</mark>-два', sc:'🐴🥁', hook:'Лошадь марширует: ать-два, ать-два!'},
+  {tr:'bal', ru:'баль', m:'мёд', snd:'<mark>бал</mark>', sc:'🐻💃🍯', hook:'Медведь пришёл на бал с бочкой мёда.'},
+  {tr:'şeker', ru:'шекер', m:'сахар', snd:'<mark>шейкер</mark>', sc:'🍹🍬', hook:'В шейкер сыплют сахар — и звучит почти как «сахар».'},
+  {tr:'masa', ru:'маса', m:'стол', snd:'<mark>масса</mark>', sc:'🍽️🍗', hook:'Стол прогнулся под массой еды.'},
+  {tr:'oda', ru:'ода', m:'комната', snd:'«<mark>О, да!</mark>»', sc:'🛏️🙌', hook:'Открываешь дверь в комнату мечты: «О, да!»'},
+  {tr:'arkadaş', ru:'аркадаш', m:'друг', snd:'<mark>Аркаша</mark>', sc:'👦🤝👦', hook:'Мой друг Аркаша — arkadaş.'},
+  {tr:'kardeş', ru:'кардеш', m:'брат, сестра', snd:'<mark>карандаш</mark>', sc:'👧✏️👦', hook:'Брат и сестра делят один карандаш.'},
+  {tr:'yemek', ru:'емек', m:'еда', snd:'<mark>ем</mark>-ек', sc:'😋🍲', hook:'Ем-ек! — это еда.'},
+  {tr:'büyük', ru:'бюйюк', m:'большой', snd:'<mark>буйвол</mark>', sc:'🐃', hook:'Буйвол — большой-пребольшой.'},
+  {tr:'küçük', ru:'кючюк', m:'маленький', snd:'«<mark>кучи-кучи</mark>»', sc:'👵👶', hook:'Бабушка сюсюкает над крошечным малышом: «Кучи-кучи!»'},
+  {tr:'evet', ru:'эвэт', m:'да', snd:'<mark>ответ</mark>', sc:'✅💬', hook:'Ответ — да!'},
+  {tr:'tamam', ru:'тамам', m:'ладно, хорошо', snd:'<mark>там-там</mark>', sc:'🥁👍', hook:'Барабан там-там: договорились, ладно!'},
+  {tr:'para', ru:'пара', m:'деньги', snd:'<mark>пара</mark> монет', sc:'🪙🪙', hook:'Пара монет — уже деньги.'},
+  {tr:'domates', ru:'доматэс', m:'помидор', snd:'<mark>дома</mark>шний томат', sc:'🏡🍅', hook:'Домашний томат — domates.'},
+  {tr:'çay', ru:'чай', m:'чай', snd:'<mark>чай</mark> — вы его знаете', sc:'🍵', hook:'Тот же чай. Турки пьют его из стаканчиков-тюльпанов.'},
+  {tr:'kahve', ru:'кахвэ', m:'кофе', snd:'<mark>кофе</mark> — почти', sc:'☕', hook:'Кахве — кофе. Турецкий кофе отсюда и пошёл.'},
+  {tr:'ütü', ru:'ютю', m:'утюг', snd:'<mark>утю</mark>г — вы его знаете', sc:'👕♨️', hook:'Наш утюг — из турецкого ütü.'},
+  {tr:'sandık', ru:'сандык', m:'сундук', snd:'<mark>сундук</mark> — вы его знаете', sc:'📦🗝️', hook:'Наш сундук — из турецкого sandık.'},
+  {tr:'saray', ru:'сарай', m:'дворец', snd:'<mark>сарай</mark>, но наоборот', sc:'🛖➡️🏰', hook:'Представь бабушкин сарай: грабли, вёдра, паутина. Открываешь дверь — а там золото, люстры и султан. У турок сарай — это дворец.'},
+  // набор 1 «Первый день» (15.11.2026, зацепки выбрал пользователь)
+  {tr:'merhaba', ru:'мэрхаба', m:'здравствуйте', snd:'<mark>мэр</mark> + <mark>хаба</mark>р', sc:'🧑‍💼✉️', hook:'Мэр берёт хабар и расплывается: «Здравствуйте, здравствуйте!» — мэр-хаба.'},
+  {tr:'günaydın', ru:'гюнайдын', m:'доброе утро', snd:'<mark>гну</mark>, <mark>ай</mark>, <mark>дын</mark>я!', sc:'🌅🍈', hook:'Рассвет. Антилопа гну завтракает дыней, укусила: «Ай! Дыня!» — гну-ай-дын.'},
+  {tr:'iyi akşamlar', ru:'ийи акшамлар', m:'добрый вечер', snd:'«и-и, <mark>а кашу — ам</mark>!»', sc:'🌙🥣', hook:'Вечер, луна в окне, малыш за кашей: «И-и… а кашу — АМ!» Вечер — akşam.'},
+  {tr:'görüşürüz', ru:'гёрюшюрюз', m:'увидимся', snd:'<mark>Гарри шур</mark>шит <mark>рюкз</mark>аком', sc:'🎒👋', hook:'Гарри уходит, шуршит рюкзаком и машет: «Увидимся!»'},
+  {tr:'hoşça kal', ru:'хошча каль', m:'пока (тому, кто остаётся)', snd:'«<mark>хорош ча</mark>й, <mark>Коль</mark>!»', sc:'🍵👋', hook:'Гость допивает чай: «Хорош чай, Коль! Пока!» Коля остаётся и машет.'},
+  {tr:'lütfen', ru:'лютфен', m:'пожалуйста', snd:'<mark>лютый фен</mark>', sc:'💨🙏', hook:'Лютый фен ревёт и сдувает человека, а тот вежливо: «Пожалуйста, потише!»'},
+  {tr:'affedersiniz', ru:'аффедерсиниз', m:'извините', snd:'«<mark>ах, Федя — синий</mark>!»', sc:'🤕🙇', hook:'Федя врезался в столб, весь в синяках, и извиняется перед столбом: «Извините!»'},
+  {tr:'pardon', ru:'пардон', m:'пардон, простите', snd:'<mark>пардон</mark> — вы его знаете', sc:'🐈👟', hook:'То же «пардон». Кошка в кедах наступила господину на ногу: «Пардон!»'},
+  {tr:'buyurun', ru:'буюрун', m:'прошу, угощайтесь', snd:'<mark>бурун</mark>дук', sc:'🐿️🍽️', hook:'Бурундук-официант протягивает поднос: «Прошу! Угощайтесь!»'},
+  {tr:'rica ederim', ru:'риджа эдерим', m:'не за что', snd:'<mark>ряж</mark>енка', sc:'🥛👋', hook:'Угостил соседа ряженкой, он благодарит, а ты: «Не за что!»'},
+  {tr:'hayır', ru:'хайыр', m:'нет (ответ)', snd:'<mark>хаер</mark>', sc:'🤘🙅', hook:'Панк трясёт длинным хаером: «НЕТ!»'},
+  // набор 2 «Рынок и еда» (15.11.2026)
+  {tr:'peynir', ru:'пейнир', m:'сыр', snd:'<mark>пейн</mark>тбол', sc:'🧀🎯', hook:'Сыр весь в дырках и кляксах — по нему стреляли из пейнтбола! Федя с ружьём.'},
+  {tr:'zeytin', ru:'зейтин', m:'оливки', snd:'<mark>зяти</mark>ны оливки', sc:'🫒😋', hook:'Зять тайком съел все тёщины оливки. Тёща: «Зять!!!»'},
+  {tr:'salatalık', ru:'салаталык', m:'огурец', snd:'<mark>лик салата</mark>', sc:'🥒🖼️', hook:'Огурец — лик салата: его портрет в золотой раме висит над миской.'},
+  {tr:'et', ru:'эт', m:'мясо', snd:'«<mark>это</mark>!»', sc:'🥩👉', hook:'Федя тычет пальцем в огромный кусок мяса: «Это!»'},
+  {tr:'tavuk', ru:'тавук', m:'курица', snd:'<mark>т(р)авк</mark>у', sc:'🐔🌱', hook:'Курица щиплет травку — тавук.'},
+  {tr:'meyve', ru:'мейве', m:'фрукты', snd:'«<mark>мои вы</mark>!»', sc:'🍎🍐', hook:'Бабушка обнимает гору фруктов: «Мои вы мои!»'},
+  {tr:'hesap', ru:'хесап', m:'счёт', snd:'«<mark>хе! сап</mark>ог!»', sc:'🐿️👢', hook:'Бурундук приносит счёт в сапоге: «Хе-хе, сапог!» Федя бледнеет.'},
+  {tr:'kilo', ru:'кило', m:'килограмм', snd:'<mark>кило</mark> — вы его знаете', sc:'⚖️🍅', hook:'То же «кило». Фокусник кладёт на весы кило помидоров.'},
+  {tr:'yarım', ru:'ярым', m:'половина', snd:'<mark>ярым</mark> ударом', sc:'🍉⚔️', hook:'Ярый богатырь одним ударом — пополам арбуз!'},
+  {tr:'taze', ru:'тазе', m:'свежий', snd:'<mark>таз</mark>', sc:'🐟🪣', hook:'Рыба плещется в тазу — такая свежая, что ещё живая!'},
+  {tr:'ucuz', ru:'уджуз', m:'дешёвый', snd:'«<mark>у, джус</mark>!»', sc:'🧃💸', hook:'Продавец сока кричит: «У, джус — дёшево!»'},
+  {tr:'pahalı', ru:'пахалы', m:'дорогой', snd:'«<mark>пахал</mark>!»', sc:'🍉💰', hook:'Федя месяц пахал, чтобы купить один дорогущий арбуз.'},
+  {tr:'gazoz', ru:'газоз', m:'газировка', snd:'«<mark>газ — в нос</mark>!»', sc:'🥤🤧', hook:'Открыл газировку — газ ударил в нос: «Апчхи!»'},
+  // набор 3 «Дом и соседи» (15.11.2026)
+  {tr:'komşu', ru:'комшу', m:'сосед', snd:'«<mark>кому шу</mark>м?!»', sc:'🧑‍🔧🔨', hook:'Сосед сверлит в семь утра, а ты стучишь в стену: «Кому шум?!»'},
+  {tr:'pencere', ru:'пенджере', m:'окно', snd:'<mark>пиджа</mark>к на окне', sc:'🪟🧥', hook:'На окне сушится пиджак, рукава болтаются на ветру.'},
+  {tr:'anahtar', ru:'анахтар', m:'ключ', snd:'«<mark>а, на! х</mark>ва<mark>та</mark>й!»', sc:'🔑🙌', hook:'Сосед кидает ключ с балкона: «А, на! Хватай!»'},
+  {tr:'asansör', ru:'асансёр', m:'лифт', snd:'<mark>Асан-сёр</mark>фер', sc:'🛗🏄', hook:'Асан катается на сёрфе прямо в лифте.'},
+  {tr:'aidat', ru:'аидат', m:'взнос за дом', snd:'«<mark>ай, дат</mark>ь!»', sc:'🏢💸', hook:'Управдом протягивает руку за взносом: «Ай, дать придётся!»'},
+  {tr:'kira', ru:'кира', m:'аренда, плата за квартиру', snd:'хозяйка <mark>Кира</mark>', sc:'👩‍💼🧮', hook:'Хозяйка Кира каждый месяц приходит за платой с калькулятором.'},
+  {tr:'kombi', ru:'комби', m:'газовый котёл', snd:'<mark>комб</mark>айн', sc:'🔥🚜', hook:'Котёл на кухне гудит и трясётся, как комбайн в поле.'},
+  {tr:'yönetici', ru:'ёнетиджи', m:'управляющий домом', snd:'<mark>йети</mark>-управдом', sc:'🧌📋', hook:'Управляющий домом — йети с папкой и ключами.'},
+  {tr:'kapı zili', ru:'капы зили', m:'дверной звонок', snd:'дверь <mark>капа</mark>ет + <mark>ЗИЛ</mark>', sc:'🚪🔔', hook:'Дверь капает (kapı), а звонок гудит, как грузовик ЗИЛ: «Биип!»'},
+  {tr:'merdiven', ru:'мердивен', m:'лестница', snd:'<mark>мер</mark>зкий <mark>диван</mark>', sc:'🛋️🪜', hook:'Тащат мерзкий диван по лестнице на девятый этаж.'},
+  {tr:'çöp', ru:'чёп', m:'мусор', snd:'<mark>ЧОП</mark>', sc:'🗑️💂', hook:'Охранник ЧОП серьёзно стережёт мусорный бак.'},
+  {tr:'musluk', ru:'муслук', m:'кран', snd:'<mark>мюсл</mark>и', sc:'🚰🥣', hook:'Открыл кран — а оттуда сыплются мюсли!'},
+  {tr:'fatura', ru:'фатура', m:'счёт (за свет, воду, газ)', snd:'счёт-<mark>фа</mark>к<mark>тура</mark>', sc:'🧾😱', hook:'Федя держит длиннющий счёт-фактуру за свет и газ.'},
+  {tr:'banyo', ru:'баньо', m:'ванная', snd:'<mark>баня</mark>', sc:'🛁🌿', hook:'В ванной — настоящая баня: пар, веник, ушанка.'},
+  {tr:'mutfak', ru:'мутфак', m:'кухня', snd:'<mark>мут</mark>ь в кастрюле', sc:'🍲🤢', hook:'На кухне в кастрюле булькает какая-то муть.'},
+  {tr:'yatak', ru:'ятак', m:'кровать', snd:'«<mark>я так</mark> и лежу!»', sc:'🛏️😴', hook:'Раскинулся на кровати: «Я так и буду лежать!»'},
+  {tr:'dolap', ru:'долап', m:'шкаф', snd:'«<mark>долой лап</mark>ы!»', sc:'🗄️🐈', hook:'Кошка в кедах лезет в шкаф: «Долой лапы из шкафа!»'},
+  {tr:'sandalye', ru:'сандалье', m:'стул', snd:'<mark>сандали</mark>и', sc:'🪑🩴', hook:'На стуле сидят сандалии — сами, как люди.'},
+  {tr:'halı', ru:'халы', m:'ковёр', snd:'<mark>хал</mark>ат', sc:'🧶🛋️', hook:'Человек в халате лежит на большом узорчатом ковре.'},
+  {tr:'perde', ru:'перде', m:'штора', snd:'<mark>пере</mark>д шторой', sc:'🪟🐈', hook:'Кошка в кедах стоит перед шторой и выглядывает в окно.'},
+  // набор 4 «Люди, числа, время» (15.11.2026; зацепки выбрал Claude по просьбе пользователя — он смотрит рисунки потом)
+  {tr:'abi', ru:'аби', m:'брат (вежливо к мужчине)', snd:'<mark>аби</mark>бас', sc:'🧢👕', hook:'Парень в спортивке «Абибас» — старший брат. Так зовут продавца, таксиста, любого мужчину чуть старше.'},
+  {tr:'abla', ru:'абла', m:'сестра (вежливо к женщине)', snd:'<mark>обла</mark>ко', sc:'☁️👩', hook:'Старшая сестра сидит на облаке и командует. Так зовут продавщицу, соседку — любую женщину чуть старше.'},
+  {tr:'amca', ru:'амджа', m:'дядя (вежливо к пожилому)', snd:'«<mark>ам! джа</mark>м!»', sc:'👴🍯', hook:'Дядя ест джем прямо из банки: «Ам!» Так зовут любого пожилого мужчину.'},
+  {tr:'teyze', ru:'тейзе', m:'тётя (вежливо к пожилой)', snd:'<mark>тейзе</mark>р', sc:'👵⚡', hook:'Бойкая тётя с тейзером — хулиганы бегут. Так зовут любую пожилую женщину.'},
+  {tr:'hocam', ru:'ходжам', m:'учитель, уважаемый', snd:'<mark>Ходжа</mark>', sc:'👳🫏', hook:'Ходжа Насреддин на ослике у доски. Hocam — «мой учитель»: так обращаются к врачу, мастеру, учителю.'},
+  {tr:'bir', ru:'бир', m:'один', snd:'<mark>beer</mark>', sc:'🍺1️⃣', hook:'Одна кружка пива — beer, бир.'},
+  {tr:'iki', ru:'ики', m:'два', snd:'<mark>ик</mark>ота', sc:'😵2️⃣', hook:'Двое икают: «Ик! Ик!»'},
+  {tr:'üç', ru:'юч', m:'три', snd:'<mark>ёж</mark>', sc:'🦔3️⃣', hook:'Три ежа: ёж, ёж, ёж — юч.'},
+  {tr:'dört', ru:'дёрт', m:'четыре', snd:'<mark>чёрт</mark>', sc:'😈4️⃣', hook:'Четыре чёрта пляшут — дёрт.'},
+  {tr:'beş', ru:'беш', m:'пять', snd:'<mark>беш</mark>бармак', sc:'🖐️5️⃣', hook:'Бешбармак — «пять пальцев»: беш — пять у всех тюрков.'},
+  {tr:'altı', ru:'алты', m:'шесть', snd:'<mark>алты</mark>н', sc:'🪙6️⃣', hook:'Шесть золотых алтын в сундучке.'},
+  {tr:'yedi', ru:'еди', m:'семь', snd:'«<mark>еди</mark>м!»', sc:'🥄7️⃣', hook:'Семеро с ложкой у котла: «Едим!»'},
+  {tr:'sekiz', ru:'секиз', m:'восемь', snd:'<mark>сек</mark>ира', sc:'🐙8️⃣', hook:'Осьминог с восемью секирами.'},
+  {tr:'dokuz', ru:'докуз', m:'девять', snd:'<mark>до куз</mark>ова', sc:'🍉9️⃣', hook:'Девять арбузов катятся до кузова грузовика.'},
+  {tr:'on', ru:'он', m:'десять', snd:'«<mark>он</mark>!»', sc:'👉🔟', hook:'Десятеро показывают на одного: «Он!»'},
+  {tr:'yüz', ru:'юз', m:'сто', snd:'<mark>юз</mark>ом', sc:'🚗💯', hook:'Машина идёт юзом на ста километрах.'},
+  {tr:'bin', ru:'бин', m:'тысяча', snd:'<mark>бин</mark>окль', sc:'🔭🐔', hook:'В бинокль видна та самая тысяча кур.'},
+  {tr:'bugün', ru:'бугюн', m:'сегодня', snd:'<mark>буги</mark>-вуги', sc:'💃📅', hook:'Сегодня танцуем буги-вуги!'},
+  {tr:'yarın', ru:'ярын', m:'завтра', snd:'<mark>яр</mark>марка', sc:'🎡📅', hook:'Афиша: «Завтра ярмарка!»'},
+  {tr:'dün', ru:'дюн', m:'вчера', snd:'<mark>дюн</mark>а', sc:'🏜️🐪', hook:'Вчера тут была дюна — а сегодня только бугорок.'},
+  // набор 5 «Город и транспорт» (15.11.2026; зацепки — Claude)
+  {tr:'otobüs', ru:'отобюс', m:'автобус', snd:'<mark>автобус</mark> — вы его знаете', sc:'🚌🏃', hook:'Федя бежит за уезжающим автобусом: «Стой!»'},
+  {tr:'taksi', ru:'такси', m:'такси', snd:'<mark>такси</mark> — вы его знаете', sc:'🚕🎩', hook:'Фокусник ловит такси взмахом шляпы.'},
+  {tr:'dolmuş', ru:'долмуш', m:'маршрутка', snd:'набита, как <mark>долм</mark>а', sc:'🚐🍃', hook:'Маршрутка набита людьми, как долма начинкой. dolmuş и значит «наполненный».'},
+  {tr:'durak', ru:'дурак', m:'остановка', snd:'<mark>дурак</mark>', sc:'🚏🤡', hook:'Дурак сидит на остановке, а автобус уже уехал.'},
+  {tr:'yol', ru:'йол', m:'дорога', snd:'<mark>ёл</mark>ки', sc:'🛣️🌲', hook:'Дорога через ёлки: «Ёлки-палки, какая дорога!»'},
+  {tr:'sokak', ru:'сокак', m:'улица', snd:'<mark>сок</mark>', sc:'🏘️🧃', hook:'По улице рекой течёт сок.'},
+  {tr:'cadde', ru:'джаддэ', m:'проспект, большая улица', snd:'<mark>джед</mark>ай', sc:'🏙️⚔️', hook:'По широкому проспекту шагает джедай.'},
+  {tr:'sağ', ru:'саа', m:'право, направо', snd:'<mark>шаг</mark> вправо', sc:'➡️👣', hook:'Огромный шаг вправо — sağ.'},
+  {tr:'sol', ru:'сол', m:'лево, налево', snd:'<mark>соль</mark> слева', sc:'⬅️🧂', hook:'Соль — слева: sol.'},
+  {tr:'düz', ru:'дюз', m:'прямо', snd:'<mark>дюз</mark>ы', sc:'⬆️🚀', hook:'Ракета летит строго прямо на дюзах.'},
+  {tr:'köprü', ru:'кёпрю', m:'мост', snd:'<mark>ко</mark>б<mark>р</mark>а', sc:'🌉🐍', hook:'Кобра выгнулась мостом через речку.'},
+  {tr:'hastane', ru:'хастанэ', m:'больница', snd:'«<mark>Hasta</mark> la vista!»', sc:'🏥🕶️', hook:'Терминатор в больнице: «Hasta la vista!» hasta — больной, hane — дом: «дом больных».'},
+  {tr:'eczane', ru:'эджзанэ', m:'аптека', snd:'«<mark>эх, зане</mark>мог!»', sc:'💊😷', hook:'«Эх, занемог!» — и бредёт в аптеку.'},
+  {tr:'fırın', ru:'фырын', m:'пекарня, печь', snd:'«<mark>фыр</mark>!»', sc:'🥖🔥', hook:'Печь пекарни фыркает паром: «Фыр!» — и выпрыгивают булки.'},
+  {tr:'postane', ru:'постанэ', m:'почта', snd:'<mark>пост</mark> — почта', sc:'📮✉️', hook:'Почтальон стоит на посту у почтового ящика.'},
+  {tr:'polis', ru:'полис', m:'полиция', snd:'<mark>полиц</mark>ия — вы её знаете', sc:'👮🚨', hook:'Полицейский со свистком: «Фьють!»'},
+  {tr:'bilet', ru:'билет', m:'билет', snd:'<mark>билет</mark> — вы его знаете', sc:'🎫🚌', hook:'Контролёр: «Ваш билет!»'},
+  {tr:'plaj', ru:'пляж', m:'пляж', snd:'<mark>пляж</mark> — вы его знаете', sc:'🏖️🐈', hook:'Кошка в кедах загорает на пляже Мерсина.'},
+  {tr:'park', ru:'парк', m:'парк, парковка', snd:'<mark>парк</mark> — вы его знаете', sc:'🅿️🌳', hook:'Машина паркуется у парка.'},
+  {tr:'benzin', ru:'бензин', m:'бензин', snd:'<mark>бензин</mark> — вы его знаете', sc:'⛽🚗', hook:'Машина пьёт бензин, как сок через трубочку.'},
+  // набор 6 «Здоровье и тело»
+  {tr:'baş', ru:'баш', m:'голова', snd:'<mark>баш</mark>ка', sc:'🧠😵', hook:'Огромная башка с шишкой.'},
+  {tr:'göz', ru:'гёз', m:'глаз', snd:'<mark>козё</mark>л', sc:'👁️🐐', hook:'Козёл с огромными выпученными глазами.'},
+  {tr:'kulak', ru:'кулак', m:'ухо', snd:'<mark>кулак</mark> у уха', sc:'👂✊', hook:'Кулак у уха, как телефон: «Алло!»'},
+  {tr:'burun', ru:'бурун', m:'нос', snd:'<mark>Бур</mark>атино', sc:'👃🪵', hook:'Буратино с длинным носом.'},
+  {tr:'ağız', ru:'аыз', m:'рот', snd:'«<mark>а-а</mark>!»', sc:'👄🥄', hook:'Врач: «Скажи А-а!» — и рот открыт.'},
+  {tr:'diş', ru:'диш', m:'зуб', snd:'<mark>дич</mark>ь', sc:'🦷🍗', hook:'Зуб грызёт жареную дичь.'},
+  {tr:'el', ru:'эль', m:'рука', snd:'<mark>эль</mark>', sc:'✋🍺', hook:'Рука держит кружку эля. Как в «Eline sağlık» — «рукам твоим здоровья».'},
+  {tr:'ayak', ru:'аяк', m:'нога', snd:'<mark>а я</mark> — каблук', sc:'🦶👠', hook:'Та самая туфля из ayakkabı: ayak-kabı — «нога-чехол».'},
+  {tr:'karın', ru:'карын', m:'живот', snd:'<mark>Карин</mark>а', sc:'🤰😖', hook:'У Карины болит живот.'},
+  {tr:'kalp', ru:'кальп', m:'сердце', snd:'<mark>к</mark>ол<mark>п</mark>ак', sc:'❤️🎩', hook:'Сердце в колпаке звездочёта: тук-тук.'},
+  {tr:'ağrı', ru:'аары', m:'боль', snd:'«<mark>а-р-р</mark>!»', sc:'🤕🔨', hook:'Пират ударил палец молотком: «А-р-р!»'},
+  {tr:'ateş', ru:'атэш', m:'жар, температура', snd:'«<mark>атас</mark>!»', sc:'🌡️🔥', hook:'Градусник кипит: «Атас, жар!» ateş — ещё и «огонь».'},
+  {tr:'doktor', ru:'доктор', m:'врач', snd:'<mark>доктор</mark> — вы его знаете', sc:'👨‍⚕️🐈', hook:'Доктор слушает кошку в кедах.'},
+  {tr:'ilaç', ru:'иляч', m:'лекарство', snd:'«<mark>и — ля</mark>чь!»', sc:'💊🛏️', hook:'Выпил лекарство — и лечь!'},
+  {tr:'hasta', ru:'хаста', m:'больной', snd:'«<mark>Hasta</mark> la vista!»', sc:'🤧🕶️', hook:'Терминатор простыл: больной. hasta — больной, hastane — больница.'},
+  {tr:'iyi', ru:'ийи', m:'хороший, хорошо', snd:'«<mark>и-и</mark>!»', sc:'😊👍', hook:'Малыш с кашей визжит от радости: «И-и!» — хорошо.'},
+  {tr:'kötü', ru:'кётю', m:'плохой, плохо', snd:'<mark>кот у</mark>…', sc:'😾💩', hook:'Плохой кот нагадил в тапок.'},
+  {tr:'yorgun', ru:'йоргун', m:'усталый', snd:'<mark>йог</mark>а', sc:'🧘😩', hook:'После йоги лежит без сил, завязанный узлом.'},
+  {tr:'uyku', ru:'уйку', m:'сон', snd:'«<mark>ку-ку</mark>!»', sc:'😴🕰️', hook:'Кукушка кричит «Ку-ку!», а он спит.'},
+  {tr:'sıcak', ru:'сыджак', m:'жаркий, горячий', snd:'<mark>сыч</mark>', sc:'☀️🦉', hook:'Сыч на ветке плавится от жары.'},
+  // набор 7 «Кафе и еда-2» (15.11.2026; зацепки — Claude, сюрпризом по просьбе пользователя)
+  {tr:'menü', ru:'мэню', m:'меню', snd:'<mark>меню</mark> — вы его знаете', sc:'📜🐿️', hook:'Бурундук-официант разворачивает меню длиной до пола.'},
+  {tr:'garson', ru:'гарсон', m:'официант', snd:'<mark>гарсон</mark> — вы его знаете', sc:'🐿️🎀', hook:'«Гарсон!» — бурундук в бабочке уже бежит с подносом.'},
+  {tr:'kahvaltı', ru:'кахвалты', m:'завтрак', snd:'<mark>kahve</mark> + <mark>altı</mark> — кофе + шесть', sc:'☕🕕', hook:'Кофе в шесть утра — и на столе завтрак: сыр, оливки, яйцо.'},
+  {tr:'çorba', ru:'чорба', m:'суп', snd:'«<mark>чур, ба</mark>бушка!»', sc:'🍲👵', hook:'Внук обнимает тарелку: «Чур, бабушка, суп мой!»'},
+  {tr:'çatal', ru:'чатал', m:'вилка', snd:'<mark>чат</mark>', sc:'🍴📱', hook:'Синий Федя печатает в чате вилкой — тык-тык.'},
+  {tr:'bıçak', ru:'бычак', m:'нож', snd:'<mark>бычо</mark>к', sc:'🐂🔪', hook:'Бычок в фартуке режет колбасу ножом.'},
+  {tr:'kaşık', ru:'кашык', m:'ложка', snd:'<mark>каш</mark>ка', sc:'🥄🥣', hook:'Ложка сама ныряет в кашку.'},
+  {tr:'tabak', ru:'табак', m:'тарелка', snd:'<mark>табак</mark>', sc:'🍽️🚬', hook:'Дед с трубкой насыпал в тарелку табак вместо супа.'},
+  {tr:'bardak', ru:'бардак', m:'стакан', snd:'<mark>бардак</mark>', sc:'🥛🥛', hook:'На столе бардак: гора стаканов.'},
+  {tr:'süt', ru:'сют', m:'молоко', snd:'<mark>шут</mark>', sc:'🃏🥛', hook:'Шут с бубенцами пьёт молоко — молочные усы.'},
+  {tr:'yumurta', ru:'юмурта', m:'яйцо', snd:'<mark>юмор</mark>', sc:'🥚🎤', hook:'Яйцо-юморист у микрофона — зал хохочет.'},
+  {tr:'biber', ru:'бибер', m:'перец', snd:'<mark>бобр</mark>', sc:'🦫🌶️', hook:'Бобёр грызёт перец чили — из ушей огонь.'},
+  {tr:'pirinç', ru:'пиринч', m:'рис', snd:'<mark>принц</mark>', sc:'🤴🍚', hook:'Принц на троне ест рис из золотой миски.'},
+  {tr:'yağ', ru:'яа', m:'масло', snd:'Баба <mark>Яга</mark>', sc:'🧙‍♀️🧈', hook:'Баба Яга жарит на масле прямо в ступе — шкварчит.'},
+  {tr:'buz', ru:'буз', m:'лёд', snd:'<mark>пуз</mark>о', sc:'🧊🫃', hook:'Кубик льда на пузе — брр!'},
+  {tr:'bira', ru:'бира', m:'пиво', snd:'<mark>beer</mark> — как bir', sc:'🍺', hook:'bir — «один», похоже на beer. А само пиво — bira.'},
+  {tr:'şarap', ru:'шарап', m:'вино', snd:'на <mark>шара</mark>п — на шару', sc:'🍷🏃', hook:'Вино на шару — все хватают бутылки.'},
+  {tr:'dondurma', ru:'дондурма', m:'мороженое', snd:'<mark>Дон</mark>а <mark>дур</mark>ят', sc:'🍦🎩', hook:'Продавец мороженого дурачит Дона — отдёргивает рожок.'},
+  {tr:'lezzetli', ru:'лезетли', m:'вкусный', snd:'<mark>лез зят</mark>ь', sc:'🍲🧔', hook:'Зять (тот, с оливками) лез головой в кастрюлю — так вкусно!'},
+  {tr:'afiyet olsun', ru:'афиет олсун', m:'приятного аппетита', snd:'«<mark>офиге</mark>ть!»', sc:'😲🍽️', hook:'Гости видят стол: «Офигеть!» А хозяйка: «Приятного аппетита!»'},
+  // набор 8 «Время и дни недели»
+  {tr:'pazar', ru:'пазар', m:'воскресенье', snd:'<mark>базар</mark>', sc:'🧺🍅', hook:'В воскресенье — базар: все с корзинами.'},
+  {tr:'pazartesi', ru:'пазартеси', m:'понедельник', snd:'«после <mark>базар</mark>а»', sc:'🧺😩', hook:'После базара — понедельник: все лежат без сил. ertesi — «после».'},
+  {tr:'salı', ru:'салы', m:'вторник', snd:'<mark>сал</mark>о', sc:'🥓🐈', hook:'Вторник — день сала: кот обнимает шмат сала.'},
+  {tr:'çarşamba', ru:'чаршамба', m:'среда', snd:'<mark>чар</mark>ы + <mark>самба</mark>', sc:'🧙‍♀️💃', hook:'Колдунья колдует чарами и танцует самбу.'},
+  {tr:'perşembe', ru:'першембе', m:'четверг', snd:'<mark>перш</mark>ит', sc:'🤧🗓️', hook:'В горле першит — кхе-кхе — значит, четверг.'},
+  {tr:'cuma', ru:'джума', m:'пятница', snd:'<mark>кума</mark>', sc:'👵🥧', hook:'В пятницу приходит кума с пирогом.'},
+  {tr:'cumartesi', ru:'джумартеси', m:'суббота', snd:'«после <mark>кум</mark>ы»', sc:'👵😴', hook:'После кумы — суббота: гамак и тишина.'},
+  {tr:'gün', ru:'гюн', m:'день', snd:'<mark>гну</mark> — из günaydın', sc:'🦬☀️', hook:'Антилопа гну под солнцем — день.'},
+  {tr:'hafta', ru:'хафта', m:'неделя', snd:'<mark>хав</mark>ать', sc:'🍽️7️⃣', hook:'Неделю хавать: семь тарелок — пн, вт, ср…'},
+  {tr:'saat', ru:'саат', m:'час, часы', snd:'<mark>сад</mark>', sc:'🌳⏰', hook:'В саду на дереве растут часы.'},
+  {tr:'kaç', ru:'кач', m:'сколько', snd:'<mark>кач</mark>ели', sc:'🎠❓', hook:'Качели: сколько раз? Раз, два, три…'},
+  {tr:'dakika', ru:'дакика', m:'минута', snd:'<mark>Дак</mark>ар', sc:'🏎️⏱️', hook:'Ралли «Дакар»: машина в пыли, на часах каждая минута.'},
+  {tr:'sabah', ru:'сабах', m:'утро', snd:'<mark>саб</mark>ля + «<mark>ах</mark>!»', sc:'🐓⚔️', hook:'Петух на рассвете машет саблей: «Ах!»'},
+  {tr:'gece', ru:'гедже', m:'ночь', snd:'«<mark>где же</mark>?»', sc:'🌙🔦', hook:'Ночь, темно, Федя шарит руками: «Где же?»'},
+  {tr:'şimdi', ru:'шимди', m:'сейчас', snd:'<mark>шим</mark>панзе', sc:'🐒⌚', hook:'Шимпанзе стучит по часам: «Сейчас!»'},
+  {tr:'sonra', ru:'сонра', m:'потом', snd:'<mark>сон</mark>', sc:'😴💤', hook:'«Потом!» — и в сон.'},
+  {tr:'hemen', ru:'хемен', m:'сразу, сейчас же', snd:'<mark>Хи-Мен</mark>', sc:'💪⚔️', hook:'Хи-Мен с мечом — сразу в бой!'},
+  {tr:'bekle', ru:'бекле', m:'подожди', snd:'<mark>бек</mark>он', sc:'🥓✋', hook:'«Подожди, бекон жарится!»'},
+  {tr:'zaman', ru:'заман', m:'время', snd:'<mark>заман</mark>ивает', sc:'⏰🎣', hook:'Часы заманивают на удочку — время утекает.'},
+  {tr:'her', ru:'хер', m:'каждый', snd:'«<mark>хер</mark>» — звучит грубовато', sc:'📅☕', hook:'her gün — каждый день. Звучит грубовато — при бабушке не повторять, но значит просто «каждый».'},
+  // набор 9 «Магазин и одежда» (15.11.2026; зацепки — Claude, сюрпризом)
+  {tr:'mağaza', ru:'мааза', m:'магазин', snd:'<mark>магаз</mark>ин — почти', sc:'🏬🛍️', hook:'Магазин — почти как у нас, только «г» турки проглатывают: маа-за.'},
+  {tr:'bakkal', ru:'баккал', m:'лавка у дома', snd:'<mark>бак</mark>але<mark>я</mark>', sc:'🏪🥫', hook:'Бакалея у дома: дядя-бакалейщик продаёт всё — от хлеба до лампочек.'},
+  {tr:'fiyat', ru:'фият', m:'цена', snd:'<mark>Фиат</mark>', sc:'🚗🏷️', hook:'Маленький «Фиат» с огромным ценником на крыше.'},
+  {tr:'indirim', ru:'индирим', m:'скидка', snd:'<mark>инд</mark>юк', sc:'🦃🏷️', hook:'Индюк с табличкой «СКИДКА −50%» — сам себя уценил.'},
+  {tr:'kasa', ru:'каса', m:'касса', snd:'<mark>касса</mark> — вы её знаете', sc:'🧾💰', hook:'Касса — та же касса. Кассирша-фокусник: «Ёк сдачи!»'},
+  {tr:'poşet', ru:'пошет', m:'пакет', snd:'«<mark>пош</mark>ёл!»', sc:'🛍️🦵', hook:'Пакет на ножках сам пошёл домой с покупками.'},
+  {tr:'elbise', ru:'эльбисе', m:'платье', snd:'«<mark>бис</mark>!»', sc:'👗🎤', hook:'Певица в роскошном платье, зал кричит: «Бис! Бис!»'},
+  {tr:'gömlek', ru:'гёмлек', m:'рубашка', snd:'<mark>гном</mark>ик', sc:'🧙👔', hook:'Гномик утонул в огромной рубашке — торчит только колпак.'},
+  {tr:'pantolon', ru:'пантолон', m:'брюки', snd:'<mark>панталон</mark>ы', sc:'👖😳', hook:'Брюки сползли — а под ними бабушкины панталоны.'},
+  {tr:'etek', ru:'этек', m:'юбка', snd:'<mark>эт</mark>и<mark>к</mark>етка', sc:'👗🏷️', hook:'На юбке этикетка больше самой юбки.'},
+  {tr:'ceket', ru:'джекет', m:'пиджак', snd:'<mark>жакет</mark> — вы его знаете', sc:'🧥', hook:'Жакет — он и есть пиджак. Мэр с хабаром в новом пиджаке.'},
+  {tr:'mont', ru:'монт', m:'куртка', snd:'<mark>монт</mark>ёр', sc:'🧥🔧', hook:'Монтёр на столбе в толстой куртке.'},
+  {tr:'şapka', ru:'шапка', m:'шляпа, шапка', snd:'<mark>шапка</mark> — вы её знаете', sc:'🎩', hook:'Шапка — та же шапка. Фокусник достаёт из шапки ещё шапку.'},
+  {tr:'çanta', ru:'чанта', m:'сумка', snd:'Джеки <mark>Чан</mark>', sc:'👜🥋', hook:'Джеки Чан отбивается дамской сумкой — кия!'},
+  {tr:'çorap', ru:'чорап', m:'носки', snd:'«<mark>чо, рэп</mark>?»', sc:'🧦🎤', hook:'Рэпер в одних носках: «Чо, рэп?»'},
+  {tr:'beden', ru:'беден', m:'размер (одежды)', snd:'<mark>бед</mark>а', sc:'👕😫', hook:'Беда с размером: футболка не налезает.'},
+  {tr:'yeni', ru:'йени', m:'новый', snd:'<mark>йен</mark>а', sc:'💴✨', hook:'Новенькая японская йена так и блестит.'},
+  {tr:'eski', ru:'эски', m:'старый', snd:'<mark>эски</mark>мо', sc:'🍦👴', hook:'Старое эскимо — дед хранил его с 1980 года.'},
+  {tr:'açık', ru:'ачык', m:'открыто', snd:'«<mark>а, чик</mark>!»', sc:'✂️🚪', hook:'Ножницы — чик! — ленточку перерезали: магазин открыт.'},
+  {tr:'kapalı', ru:'капалы', m:'закрыто', snd:'<mark>капал</mark>о', sc:'🚪💧', hook:'С двери капало (kapı!) — магазин закрыт на ремонт.'},
+  // набор 10 «Погода и цвета»
+  {tr:'hava', ru:'хава', m:'погода, воздух', snd:'<mark>Гава</mark>на', sc:'🌴☀️', hook:'Погода как в Гаване: сигара, пальма, жара.'},
+  {tr:'güneş', ru:'гюнеш', m:'солнце', snd:'<mark>гну</mark> <mark>нес</mark>ёт', sc:'🦬☀️', hook:'Гну (из «gün» — день) несёт на рогах солнце.'},
+  {tr:'yağmur', ru:'яамур', m:'дождь', snd:'«я — <mark>мур</mark>!»', sc:'🌧️🐈', hook:'Котёнок под дождём: «Я — мур!» Не путать с yağ (масло).'},
+  {tr:'kar', ru:'кар', m:'снег', snd:'«<mark>кар</mark>!»', sc:'❄️🐦‍⬛', hook:'Ворона по колено в снегу: «Кар!»'},
+  {tr:'rüzgar', ru:'рюзгяр', m:'ветер', snd:'<mark>рюкз</mark>ак <mark>Гар</mark>ри', sc:'💨🎒', hook:'Ветер уносит рюкзак Гарри (того, что шуршит рюкзаком).'},
+  {tr:'bulut', ru:'булут', m:'облако', snd:'<mark>бул</mark>ка', sc:'☁️🥖', hook:'Облако как булка — птицы отщипывают.'},
+  {tr:'soğuk', ru:'соук', m:'холодный', snd:'<mark>со</mark>с<mark>у</mark>ль<mark>к</mark>а', sc:'🥶🧊', hook:'Сосулька на носу — холодно!'},
+  {tr:'renk', ru:'ренк', m:'цвет', snd:'<mark>ринг</mark>', sc:'🥊🌈', hook:'Боксёры на ринге все в разных цветах.'},
+  {tr:'kırmızı', ru:'кырмызы', m:'красный', snd:'<mark>кир</mark>пич', sc:'🧱🔴', hook:'Красный кирпич мажут красной краской.'},
+  {tr:'mavi', ru:'мави', m:'синий, голубой', snd:'<mark>Ма</mark>львина', sc:'💙👧', hook:'Мальвина с голубыми волосами.'},
+  {tr:'yeşil', ru:'йешиль', m:'зелёный', snd:'«<mark>ешь ил</mark>!»', sc:'🐸🟢', hook:'Лягушка уплетает зелёный ил: «Ешь ил!»'},
+  {tr:'sarı', ru:'сары', m:'жёлтый', snd:'<mark>сари</mark>', sc:'🥻💛', hook:'Индийская тётя в жёлтом сари.'},
+  {tr:'siyah', ru:'сийах', m:'чёрный', snd:'«<mark>сия</mark>ю!»', sc:'🐈‍⬛✨', hook:'Чёрный кот сияет от гордости: «Сияю!»'},
+  {tr:'beyaz', ru:'бейаз', m:'белый', snd:'<mark>бейс</mark>бол', sc:'⚾⚪', hook:'Белый мяч бейсбола летит — бей!'},
+  {tr:'pembe', ru:'пембе', m:'розовый', snd:'«<mark>пэм-пэм</mark>…»', sc:'🐆💗', hook:'Розовая пантера крадётся: пэм-пэм, пэм-пэм…'},
+  {tr:'mor', ru:'мор', m:'фиолетовый', snd:'<mark>мор</mark>ж', sc:'🦭💜', hook:'Фиолетовый морж — от холода посинел до фиолетового.'},
+  {tr:'gri', ru:'гри', m:'серый', snd:'<mark>гри</mark>б', sc:'🍄🩶', hook:'Серый гриб — серее мыши.'},
+  {tr:'kahverengi', ru:'кахверенги', m:'коричневый', snd:'<mark>kahve</mark> + <mark>renk</mark> — цвет кофе', sc:'☕🟤', hook:'Цвет кофе: kahve (кофе) + renk (цвет). Конструктор!'},
+  // набор 11 «Семья и люди» (15.11.2026; зацепки — Claude, сюрпризом)
+  {tr:'aile', ru:'аиле', m:'семья', snd:'<mark>ал</mark>л<mark>е</mark>я', sc:'👨‍👩‍👧🌳', hook:'Вся семья гуляет по аллее — от деда до кошки.'},
+  {tr:'çocuk', ru:'чоджук', m:'ребёнок', snd:'«<mark>чо, жук</mark>?»', sc:'🧒🪲', hook:'Ребёнок поймал жука и спрашивает: «Чо, жук?»'},
+  {tr:'kız', ru:'кыз', m:'девочка, дочь', snd:'«<mark>кис</mark>-кис!»', sc:'👧🐈', hook:'Девочка зовёт кошку: «Кис-кис!»'},
+  {tr:'eş', ru:'эш', m:'супруг, супруга', snd:'«<mark>ешь</mark>!»', sc:'💑🍲', hook:'Супруга ставит тарелку: «Ешь!» — так и живут.'},
+  {tr:'koca', ru:'коджа', m:'муж', snd:'<mark>кож</mark>анка', sc:'🧔🧥', hook:'Муж в кожанке — суровый, как в девяностые.'},
+  {tr:'dede', ru:'дэдэ', m:'дедушка', snd:'<mark>дед</mark> — вы его знаете', sc:'👴', hook:'Дед — он и есть дед. Тот самый, что сыпал табак в тарелку.'},
+  {tr:'nine', ru:'нинэ', m:'бабушка', snd:'бабушка <mark>Нин</mark>а', sc:'👵🧶', hook:'Бабушка Нина вяжет носки на всю семью.'},
+  {tr:'torun', ru:'торун', m:'внук', snd:'<mark>Тор</mark>', sc:'🧒🔨', hook:'Внук играет в Тора — молотком по бабушкиному серванту.'},
+  {tr:'bebek', ru:'бебек', m:'младенец', snd:'<mark>беби</mark>', sc:'👶🍼', hook:'Беби с соской: «Бе-бе!»'},
+  {tr:'kadın', ru:'кадын', m:'женщина', snd:'«ну и <mark>кад</mark>р!»', sc:'👩🎬', hook:'Женщина — ну и кадр! — оператор не может оторвать камеру.'},
+  {tr:'isim', ru:'исим', m:'имя', snd:'<mark>изюм</mark>', sc:'🍇🏷️', hook:'— Как тебя зовут? — Изюм! — гордо отвечает изюминка с бейджиком.'},
+  {tr:'yaş', ru:'яш', m:'возраст', snd:'<mark>ящ</mark>ер', sc:'🦎🎂', hook:'Ящеру 300 лет — свечки на торте не помещаются.'},
+  {tr:'evli', ru:'эвли', m:'женат, замужем', snd:'<mark>ev</mark> + li — «с домом»', sc:'🏠💍', hook:'ev — дом, -li — «с». С домом — значит, женат: кольцо, дом и ипотека.'},
+  {tr:'bekar', ru:'бекяр', m:'холостой', snd:'<mark>пекар</mark>ь', sc:'🧑‍🍳🥐', hook:'Холостяк-пекарь сам себе печёт — жены-то нет.'},
+  {tr:'düğün', ru:'дююн', m:'свадьба', snd:'<mark>дуг</mark>ой', sc:'💃🎻', hook:'На свадьбе так пляшут, что гнутся дугой.'},
+  {tr:'doğum günü', ru:'доум гюню', m:'день рождения', snd:'<mark>дог</mark> + <mark>гну</mark>', sc:'🐕🦬🎂', hook:'Дог и гну задувают свечи: doğum — рождение, gün — день.'},
+  {tr:'hediye', ru:'хедийе', m:'подарок', snd:'«<mark>эх, дя</mark>дя!»', sc:'🎁👨', hook:'«Эх, дядя, вот это подарок!»'},
+  {tr:'akraba', ru:'акраба', m:'родственник', snd:'<mark>акроба</mark>т', sc:'🤸🤸', hook:'Родственники-акробаты: вся родня — пирамидой.'},
+  // набор 12 «Вежливость, работа и деньги»
+  {tr:'inşallah', ru:'иншаллах', m:'даст бог, надеюсь', snd:'<mark>иншаллах</mark> — вы его слышали', sc:'🙏🤞', hook:'Турки говорят на любое «завтра»: «Yarın, inşallah» — значит, может быть.'},
+  {tr:'maşallah', ru:'машаллах', m:'вот это да! (чтоб не сглазить)', snd:'«<mark>Маша</mark>, <mark>ах</mark>!»', sc:'👧✨', hook:'Маша в новом платье — все ахают: «Маша, ах!» Говорят на чужого ребёнка, обновку, успех.'},
+  {tr:'başın sağ olsun', ru:'башын саа олсун', m:'соболезную', snd:'<mark>баш</mark>ка + <mark>sağ</mark> — «голова пусть будет здорова»', sc:'🤝🖤', hook:'Дословно: «твоя голова пусть будет здорова». Тихо, рука на плече.'},
+  {tr:'hayırlı olsun', ru:'хайырлы олсун', m:'поздравляю (с покупкой, с новым)', snd:'<mark>хаер</mark> панка', sc:'🤘🚗', hook:'Панк с хаером поздравляет соседа с новой машиной: «Хайырлы олсун!»'},
+  {tr:'kusura bakma', ru:'кусура бакма', m:'не обессудь, извини', snd:'«<mark>кусь</mark>!»', sc:'🐕😬', hook:'Собака сделала «кусь!» — хозяин: «Kusura bakma!»'},
+  {tr:'iş', ru:'иш', m:'работа', snd:'«<mark>ищ</mark>и!»', sc:'💼🔎', hook:'Жена: «Ищи работу!» — муж с лупой ищет.'},
+  {tr:'maaş', ru:'мааш', m:'зарплата', snd:'<mark>маш</mark>ет', sc:'💸👋', hook:'Начальник машет зарплатой — а дать не спешит.'},
+  {tr:'banka', ru:'банка', m:'банк', snd:'<mark>банка</mark>', sc:'🏦🫙', hook:'Банк — а деньги хранят в банке из-под огурцов.'},
+  {tr:'nakit', ru:'накит', m:'наличные', snd:'<mark>накид</mark>али', sc:'💵💵', hook:'Наличных накидали — целый ворох купюр.'},
+  {tr:'borç', ru:'борч', m:'долг', snd:'<mark>борщ</mark>', sc:'🍲📝', hook:'Ел борщ в долг — в тетради уже 40 тарелок.'},
+  {tr:'patron', ru:'патрон', m:'начальник', snd:'<mark>патрон</mark>', sc:'🧔💼', hook:'Патрон — он и у нас патрон: сигара, кресло, «Работать!».'},
+  {tr:'tatil', ru:'татиль', m:'отпуск', snd:'<mark>Таит</mark>и', sc:'🏝️🍹', hook:'Отпуск на Таити: гамак, кокос, телефон утонул.'},
+  {tr:'kredi kartı', ru:'креди карты', m:'банковская карта', snd:'<mark>кредит</mark>ка — вы её знаете', sc:'💳', hook:'Кредитка — она и есть кредитка: kredi + kart (карта).'},
+  {tr:'toplantı', ru:'топланты', m:'совещание', snd:'«<mark>топ</mark>-топ»', sc:'👞🗓️', hook:'Все топают на совещание: топ-топ… и засыпают.'},
+  {tr:'müdür', ru:'мюдюр', m:'директор', snd:'<mark>мудр</mark>ец', sc:'🧙💼', hook:'Директор — мудрец с бородой до пола.'},
+  {tr:'zam', ru:'зам', m:'повышение (цены, зарплаты)', snd:'<mark>зам</mark>', sc:'📈🙋', hook:'Зам просит повышение, а цены уже подняли сами.'},
+  // набор 13 «Природа и звери» (16.11.2026; зацепки — Claude, сюрпризом)
+  {tr:'ağaç', ru:'аач', m:'дерево', snd:'«<mark>ага</mark>, <mark>щ</mark>ас!»', sc:'🌳🐈', hook:'Кошка на дереве. — Слезай! — Ага, щас!'},
+  {tr:'çiçek', ru:'чичек', m:'цветок', snd:'«<mark>чих</mark>-<mark>чих</mark>!»', sc:'🌼🤧', hook:'Понюхал цветок — «чих-чих!» — и лепестки разлетелись.'},
+  {tr:'dağ', ru:'даа', m:'гора', snd:'«<mark>да-а-а</mark>!»', sc:'⛰️🧗', hook:'Альпинист залез на гору и орёт: «Да-а-а!»'},
+  {tr:'göl', ru:'гёль', m:'озеро', snd:'«<mark>гол</mark>!»', sc:'🏞️⚽', hook:'Мяч улетел в озеро — «Гол!» Утки засчитали.'},
+  {tr:'nehir', ru:'нехир', m:'река', snd:'«<mark>нехи</mark>ло!»', sc:'🌊🚣', hook:'Река разлилась нехило — дед плывёт на тазике.'},
+  {tr:'orman', ru:'орман', m:'лес', snd:'<mark>ор</mark>анг<mark>ут</mark>ан', sc:'🌲🦧', hook:'Орангутан — по-малайски «лесной человек». Хозяин леса.'},
+  {tr:'kum', ru:'кум', m:'песок', snd:'<mark>кум</mark>', sc:'🏖️🧔', hook:'Кума закопала кума в песок — торчит одна голова.'},
+  {tr:'taş', ru:'таш', m:'камень', snd:'«<mark>тащ</mark>и!»', sc:'🪨💪', hook:'Камень огромный, а прораб: «Тащи!»'},
+  {tr:'inek', ru:'инэк', m:'корова', snd:'<mark>ине</mark>й', sc:'🐄❄️', hook:'Корова вся в инее: «Му-у-орозно!»'},
+  {tr:'koyun', ru:'коюн', m:'овца', snd:'<mark>кой</mark>ка', sc:'🐑🛏️', hook:'Не спится — считай овец. Овца сама легла на койку.'},
+  {tr:'keçi', ru:'кечи', m:'коза', snd:'<mark>кетч</mark>уп', sc:'🐐🍅', hook:'Коза съела весь кетчуп — борода красная.'},
+  {tr:'tavşan', ru:'тавшан', m:'заяц', snd:'«<mark>дав</mark>ай <mark>шан</mark>с!»', sc:'🐇🏃', hook:'Заяц удирает от лисы: «Давай шанс!»'},
+  {tr:'ayı', ru:'айы', m:'медведь', snd:'<mark>ай</mark>ва', sc:'🐻🍐', hook:'Медведь трясёт айву — айва по голове: «Ай!»'},
+  {tr:'aslan', ru:'аслан', m:'лев', snd:'<mark>Аслан</mark> — вы его знаете', sc:'🦁👑', hook:'Аслан из «Нарнии» — лев. И у турок Аслан — лев.'},
+  {tr:'maymun', ru:'маймун', m:'обезьяна', snd:'<mark>май</mark>ка', sc:'🐒👕', hook:'Обезьяна в майке «Я ❤ банан».'},
+  {tr:'fare', ru:'фарэ', m:'мышь', snd:'<mark>фар</mark>а', sc:'🐭🔦', hook:'Мышь с фарой на лбу ищет сыр в темноте.'},
+  {tr:'arı', ru:'ары', m:'пчела', snd:'<mark>ар</mark>ия', sc:'🐝🎤', hook:'Пчела поёт арию — весь луг в восторге.'},
+  {tr:'yılan', ru:'йылан', m:'змея', snd:'<mark>Илон</mark>', sc:'🐍🚀', hook:'Змея Илон запускает ракету.'},
+  {tr:'böcek', ru:'бёджек', m:'жук, насекомое', snd:'на <mark>боч</mark>ок', sc:'🪲🔄', hook:'Жук упал на бочок и сучит лапками.'},
+  {tr:'kelebek', ru:'келебек', m:'бабочка', snd:'<mark>кол</mark>о<mark>б</mark>ок', sc:'🦋🟡', hook:'Колобок отрастил крылья бабочки — от лисы улетел.'},
+  {tr:'kuzu', ru:'кузу', m:'ягнёнок', snd:'<mark>Кузя</mark>', sc:'🐑🧹', hook:'Домовёнок Кузя катается на ягнёнке.'},
+  {tr:'hayvan', ru:'хайван', m:'животное', snd:'«<mark>хай</mark>, <mark>Ван</mark>я!»', sc:'🐾👋', hook:'Звери машут: «Хай, Ваня!» — Ваня в зоопарке.'},
+  // набор 14 «Я, ты и вопросы»
+  {tr:'ben', ru:'бэн', m:'я', snd:'<mark>Бен</mark> Кеноби', sc:'🧔⚔️', hook:'Бен Кеноби: «Я — последняя надежда!»'},
+  {tr:'sen', ru:'сэн', m:'ты', snd:'<mark>сен</mark>сей', sc:'🥋👉', hook:'Сенсей тычет пальцем: «Ты!»'},
+  {tr:'o', ru:'о', m:'он, она, оно', snd:'«<mark>О</mark>!» — и пальцем', sc:'👉🧍', hook:'«О!» — показывают пальцем на него, на неё, на оно.'},
+  {tr:'biz', ru:'биз', m:'мы', snd:'<mark>биз</mark>оны', sc:'🦬🦬', hook:'Стадо бизонов: «Мы!»'},
+  {tr:'siz', ru:'сиз', m:'вы (и вежливо)', snd:'<mark>сиз</mark>ый', sc:'🐦🎩', hook:'Сизый голубь в цилиндре — только на «Вы».'},
+  {tr:'onlar', ru:'онлар', m:'они', snd:'o + lar — «он» во множестве', sc:'👥👥', hook:'o — он, -lar — много. Много «он» — это они.'},
+  {tr:'ne', ru:'нэ', m:'что', snd:'«<mark>не</mark> понял?»', sc:'🤨❓', hook:'— Что? — Не понял?'},
+  {tr:'kim', ru:'ким', m:'кто', snd:'<mark>Ким</mark> Чен Ын', sc:'🚪❓', hook:'Звонок в дверь. — Кто там? — Ким.'},
+  {tr:'nerede', ru:'нэрэдэ', m:'где', snd:'«<mark>не ред</mark>иска?»', sc:'🥬🔍', hook:'— Где редиска? — Не редиска это, а свёкла!'},
+  {tr:'nasıl', ru:'насыл', m:'как', snd:'«<mark>насил</mark>у!»', sc:'😮‍💨🧍', hook:'— Как ты? — Насилу дошёл.'},
+  {tr:'neden', ru:'нэдэн', m:'почему', snd:'«<mark>не д</mark>ам!»', sc:'🙅🍬', hook:'— Почему? — Не дам! — и всё объяснил.'},
+  {tr:'hangi', ru:'ханги', m:'какой, который', snd:'<mark>хан</mark> + <mark>ги</mark>ря', sc:'👑🏋️', hook:'Хан выбирает гирю: «Какую?»'},
+  {tr:'ve', ru:'вэ', m:'и', snd:'<mark>ве</mark>рёвочка', sc:'🪢', hook:'Верёвочка связывает два слова: кошка и собака.'},
+  {tr:'ama', ru:'ама', m:'но', snd:'«<mark>ам</mark>!»', sc:'🍰😋', hook:'Сел на диету, но… ам!'},
+  {tr:'belki', ru:'белки', m:'может быть', snd:'<mark>белки</mark>', sc:'🐿️🌼', hook:'Белки гадают на ромашке: может быть, может быть…'},
+  {tr:'biraz', ru:'бираз', m:'немного', snd:'«<mark>бир раз</mark>» — разок', sc:'🤏🍰', hook:'bir — один. Один разок, немножко!'},
+  {tr:'daha', ru:'даха', m:'ещё', snd:'<mark>дач</mark>а', sc:'🏡🥒', hook:'На даче: «Ещё грядку!» — и ещё, и ещё.'},
+  {tr:'hep', ru:'хэп', m:'всегда', snd:'<mark>хеп</mark>пи', sc:'😃🎈', hook:'Хеппи — всегда! Смайлик улыбается даже под дождём.'},
+  {tr:'hiç', ru:'хич', m:'совсем не, никогда', snd:'<mark>хич</mark>хайкер', sc:'👍🚗', hook:'Хичхайкер голосует — никто никогда не остановился.'},
+  {tr:'burada', ru:'бурада', m:'здесь', snd:'<mark>бурда</mark>', sc:'🍲🤢', hook:'— Что здесь? — Бурда! — Здесь и ешь.'},
+  {tr:'orada', ru:'орада', m:'там', snd:'д<mark>орада</mark>', sc:'🐟👉', hook:'— Где ужин? — Там! — дорада уплывает.'},
+  {tr:'çünkü', ru:'чюнкю', m:'потому что', snd:'<mark>чунг</mark>а-<mark>чанг</mark>а', sc:'🏝️🎶', hook:'— Почему весело? — Потому что чунга-чанга!'},
+];
+var P = [
+  {p:[['Kolay','легко'],['gel','придёт (gel!)'],['+sin','пусть']], nat:[['Пусть',2],['легко',0],['идёт',1],[' — бог в помощь!',-1]], ru:'колай гельсин', sc:'🔨😅',
+   hook:'gel вы уже знаете — гель, «иди сюда». gel-sin — «пусть придёт». «Легко пусть придёт работа», — желает Йода мастеру.', when:'Мастеру, продавцу, соседу с ремонтом — любому, кто работает. Отвечают «Sağ ol» — спасибо.'},
+  {p:[['Geçmiş','прошедшим'],['olsun','пусть станет']], nat:[['Пусть',1],['это',-1],['станет',1],['прошлым',0]], ru:'гечмиш олсун', sc:'🤒🩹',
+   hook:'Не «выздоравливай», а «прошедшим пусть станет» — так магистр Йода утешал бы раненого джедая. Турок сразу смотрит в будущее.', when:'Заболел, сломалась машина, любая неприятность.'},
+  {p:[['Afiyet','аппетит-здоровье'],['olsun','пусть будет']], nat:[['Приятного',1],['аппетита',0]], ru:'афиет олсун', sc:'🍲😋',
+   hook:'Afiyet — «аппетит», даже звучит похоже. olsun — «пусть будет», то же, что в geçmiş olsun.', when:'За столом, когда кто-то начинает есть.'},
+  {p:[['El','рука'],['+in','твоя'],['+e','(к)'],['sağlık','здоровье']], nat:[['Здоровья',3],['твоим',1],['рукам',0]], ru:'элинэ саалык', sc:'🍰👐',
+   hook:'Не «спасибо», а «рукам твоим здоровья» — хвалят руки, которые это сделали.', when:'Тому, кто приготовил еду или хорошо сделал работу.'},
+  {p:[['Hoş','приятно'],['gel','пришли (gel!)'],['+diniz','вы']], nat:[['Добро',0],['пожаловать',1]], ru:'хош гельдиниз', sc:'🚪🤗',
+   hook:'hoş — как наше «хорош». Гость отвечает «Hoş bulduk» — «приятно нашли».', when:'Гостю на пороге, покупателю в магазине.'},
+  {p:[['Su','вода'],['yok','нет (ёк!)']], nat:[['Воды',0],['нет',1]], ru:'су йок', sc:'🚰🤷',
+   hook:'Оба слова вы уже знаете: сушняк — su, ёк — yok. Турок ставит «нет» в самый конец.', when:'Отключили воду — в Мерсине летом бывает.'},
+  {p:[['Kedi','кошка'],['balkon','балкон'],['+da','на']], nat:[['Кошка',0],['на',2],['балконе',1]], ru:'кеди балконда', sc:'🐈👟🏙️',
+   hook:'Кошка в кедах на балконе. «На» у турок не впереди, а прилипает в конце: балкон-на.', when:'Вагончик -da/-de — это «в, на»: evde — дома, markette — в магазине.'},
+  {p:[['Ev','дом'],['+e','к'],['gid','ид-'],['+iyor','сейчас'],['+um','я']], nat:[['Я',4],['иду',2],['домой',0]], ru:'эвэ гидийорум', sc:'🏠🚶',
+   hook:'Гид идёт домой. «Домой иду я», — сказал бы Йода. Турки говорят так всю жизнь: дом-к иду-сейчас-я.', when:'Уходя из гостей или с работы.'},
+  {p:[['Kapı','дверь'],['+yı','(её)'],['kapat','закрой']], nat:[['Закрой',2],['дверь',0]], ru:'капыйы капат', sc:'🚪🔒',
+   hook:'kapı — дверь, с которой капает. kapat — «капут»: закрыл, и всё.', when:'Сквозняк, кошка убегает, холодно.'},
+  {p:[['Çok','очень'],['güzel','красиво']], nat:[['Очень',0],['красиво',1]], ru:'чок гюзель', sc:'🦢✨',
+   hook:'Чокнулись (çok) за гуся-красавца (güzel).', when:'Про вид, еду, платье, работу — про всё, что нравится.'},
+  {p:[['Deniz','море'],['güzel','красивое']], nat:[['Море',0],['красивое',1]], ru:'дэниз гюзель', sc:'🌊✨',
+   hook:'Денис ушёл в море, а там гусь-красавец. «Есть» и «быть» турки не говорят — просто «море красивое».', when:'На набережной в Мерсине.'},
+  {p:[['Arkadaş','друг'],['+ım','мой'],['gel','пришёл (gel!)'],['+di','уже']], nat:[['Мой',1],['друг',0],['пришёл',2]], ru:'аркадашым гельди', sc:'👦🚪',
+   hook:'Аркаша (arkadaş) + «мой» (-ım) пришёл (gel — гель). -di в конце значит, что это уже случилось.', when:'Когда открываешь дверь другу.'},
+  {p:[['Çay','чай'],['var','есть'],['mı','?']], nat:[['Чай',0],['есть',1],['?',2]], ru:'чай вар мы', sc:'🍵❓',
+   hook:'var — «есть», yok — «нет». А вопрос — отдельное словечко mı в конце, как голосом поднять.', when:'В кафе, в гостях. Ответ: «Var!» или «Yok».'},
+  {p:[['Anne','мама'],['+m','моя'],['ev','дом'],['+de','в']], nat:[['Моя',1],['мама',0],['дома',2]], ru:'аннэм эвдэ', sc:'👩🏠',
+   hook:'Аня (anne) + -m «моя»; ev — «Эй, в дом!» + -de «в». Как кошка балкон-да.', when:'Когда спрашивают, где мама.'},
+  {p:[['Evet','да'],['tamam','ладно']], nat:[['Да',0],['ладно',1]], ru:'эвэт тамам', sc:'✅🥁',
+   hook:'Ответ — да (evet), барабан там-там (tamam).', when:'Самый частый ответ в Турции на всё подряд.'},
+  {p:[['Köpek','собака'],['büyük','большая']], nat:[['Собака',0],['большая',1]], ru:'кёпек бюйюк', sc:'🐕🐃',
+   hook:'Собака с копейкой выросла с буйвола.', when:'Во дворе, где бегают собаки.'},
+  {p:[['Güç','сила'],['sen','ты'],['+inle','с'],['olsun','пусть будет']], nat:[['Да пребудет',3],['с',2],['тобой',1],['Сила',0]], ru:'гюч сенинле олсун', sc:'⚔️✨',
+   hook:'Дословно: «Сила с-тобой пусть-будет». olsun вы уже знаете — afiyet olsun, geçmiş olsun. Йода — турок, теперь доказано.', when:'Перед экзаменом, дальней дорогой — и любому фанату «Звёздных войн».'},
+  {p:[['Ev','дом'],['+e','к'],['git','идти'],['+meli','должен'],['+yim','я']], nat:[['Я',4],['должен',3],['идти',2],['домой',0]], ru:'эвэ гитмелийим', sc:'🏠🕰️',
+   hook:'Йода сказал бы: «Домой идти должен я». Турок говорит ровно так же: дом-к идти-должен-я. Учить турецкий порядок — значит говорить как магистр.', when:'Когда засиделся в гостях.'},
+  {p:[['Ne','что'],['kadar','сколько']], nat:[['Сколько',1],['стоит?',-1]], ru:'нэ кадар', sc:'💰❓',
+   hook:'«Не кадр, а цена!» — на рынке хватит этих двух слов и пальца на товар.', when:'На рынке, в магазине, у мастера.'},
+  // набор 1 «Первый день»
+  {p:[['Merhaba,','здравствуй'],['arkadaş!','друг']], nat:[['Здравствуй,',0],['друг!',1]], ru:'мэрхаба, аркадаш', sc:'🧑‍💼👦',
+   hook:'Мэр с хабаром здоровается с Аркашей — оба слова вы уже знаете.', when:'Встретил друга, соседа, знакомого.'},
+  {p:[['Günaydın,','доброе утро'],['anne!','мама']], nat:[['Доброе утро,',0],['мама!',1]], ru:'гюнайдын, аннэ', sc:'🌅👩',
+   hook:'Гну с дыней будит маму Аню: «Доброе утро!»', when:'Утром — дома, соседу, в магазине.'},
+  {p:[['Çay,','чай'],['lütfen.','пожалуйста']], nat:[['Чай,',0],['пожалуйста.',1]], ru:'чай, лютфен', sc:'🍵💨',
+   hook:'Лютый фен сдувает пар с чая, а ты просишь: «Чай, пожалуйста». Вежливое слово — в конце, как у нас.', when:'В кафе, в гостях.'},
+  {p:[['Hayır,','нет'],['teşekkür ederim.','спасибо']], nat:[['Нет,',0],['спасибо.',1]], ru:'хайыр, тешекюр эдерим', sc:'🤘🐔',
+   hook:'Панк трясёт хаером «НЕТ!», а тысяча кур кланяется «спасибо». Вежливый отказ.', when:'Предлагают на рынке, в магазине, на улице.'},
+  {p:[['Affedersiniz,','извините'],['su','вода'],['var','есть'],['mı?','?']], nat:[['Извините,',0],['вода',1],['есть?',2]], ru:'аффедерсиниз, су вар мы', sc:'🤕💧',
+   hook:'Синий Федя извиняется и просит воды. var — «есть», mı — вопрос, как в «Çay var mı?».', when:'В магазине, у соседа, в кафе.'},
+  // набор 2 «Рынок и еда»
+  {p:[['Peynir','сыр'],['taze','свежий'],['mi?','?']], nat:[['Сыр',0],['свежий?',1]], ru:'пейнир тазе ми', sc:'🧀👃',
+   hook:'Федя нюхает пейнтбольный сыр. mi — вопрос в конце, как в «Çay var mı?».', when:'На рынке — про сыр, рыбу, хлеб.'},
+  {p:[['Yarım','половина'],['kilo','кило'],['zeytin,','оливки'],['lütfen.','пожалуйста']], nat:[['Полкило',1],['оливок,',2],['пожалуйста.',3]], ru:'ярым кило зейтин, лютфен', sc:'🫒⚖️',
+   hook:'Ярым ударом — пол, кило — кило, зятины оливки и лютый фен. Сколько — впереди, вежливость — в конце.', when:'На рынке: yarım kilo, bir kilo, iki kilo…'},
+  {p:[['Çok','очень'],['pahalı!','дорого']], nat:[['Очень',0],['дорого!',1]], ru:'чок пахалы', sc:'😱💰',
+   hook:'Чокнулись (çok) — Федя пахал (pahalı), а арбуз всё равно не по карману.', when:'Торгуешься на рынке. Продавец часто уступит.'},
+  {p:[['Hesap,','счёт'],['lütfen.','пожалуйста']], nat:[['Счёт,',0],['пожалуйста.',1]], ru:'хесап, лютфен', sc:'🐿️👢',
+   hook:'Бурундук несёт счёт в сапоге, а ты вежливо — лютый фен.', when:'В кафе и ресторане, когда пора уходить.'},
+  {p:[['Gazoz','газировка'],['var','есть'],['mı?','?']], nat:[['Газировка',0],['есть?',1]], ru:'газоз вар мы', sc:'🥤🎩',
+   hook:'Газ — в нос, а фокусник разводит руками: «Yok!» — нету.', when:'В магазинчике, в кафе. Ответ: «Var!» или «Yok».'},
+  // набор 3 «Дом и соседи»
+  {p:[['Anahtar','ключ'],['yok!','нет (ёк!)']], nat:[['Ключа',0],['нет!',1]], ru:'анахтар йок', sc:'🔑🎩',
+   hook:'«А, на! Хватай!» — а ловить нечего: фокусник разводит руками — ёк!', when:'Захлопнул дверь, потерял ключи.'},
+  {p:[['Asansör','лифт'],['var','есть'],['mı?','?']], nat:[['Лифт',0],['есть?',1]], ru:'асансёр вар мы', sc:'🛗🛋️',
+   hook:'Диван тащат по лестнице, а Асан машет из лифта. var mı — «есть?», как в «Çay var mı?».', when:'Смотришь квартиру, переезжаешь.'},
+  {p:[['Kira','аренда'],['ne kadar?','сколько']], nat:[['Сколько',1],['аренда?',0]], ru:'кира нэ кадар', sc:'👩‍💼🧮',
+   hook:'Хозяйка Кира и «не кадр» с рынка: сколько?', when:'Ищешь квартиру.'},
+  {p:[['Kombi','котёл'],['çok','очень'],['pahalı!','дорогой']], nat:[['Котёл',0],['очень',1],['дорогой!',2]], ru:'комби чок пахалы', sc:'🔥😱',
+   hook:'Комбайн-котёл, чокнулись — и Федя пахал зря.', when:'Котёл сломался — зима в Мерсине бывает холодной.'},
+  {p:[['Komşu','сосед'],['gel','пришёл (gel!)'],['+di','уже']], nat:[['Сосед',0],['пришёл.',1]], ru:'комшу гельди', sc:'🔔🧑‍🔧',
+   hook:'Звонок-ЗИЛ гудит — на пороге сосед с перфоратором. -di — уже случилось, как в «Arkadaşım geldi».', when:'Звонят в дверь.'},
+  {p:[['Banyo','ванная'],['+da','в'],['su','вода'],['yok.','нет']], nat:[['В',1],['ванной',0],['нет',3],['воды.',2]], ru:'баньода су йок', sc:'🛁🎩',
+   hook:'Баня с веником, а из крана — ничего. -da — «в», как в «balkonda».', when:'Отключили воду.'},
+  // набор 4 «Люди, числа, время»
+  {p:[['Bir','один'],['çay,','чай'],['lütfen.','пожалуйста']], nat:[['Один',0],['чай,',1],['пожалуйста.',2]], ru:'бир чай, лютфен', sc:'🍺🍵',
+   hook:'Бир — одна кружка, чай — тюльпан, лютый фен — вежливость. Так и заказывают в кафе.', when:'В кафе, в чайхане: bir çay, iki çay…'},
+  {p:[['İki','два'],['kilo','кило'],['domates.','помидоры']], nat:[['Два',0],['кило',1],['помидоров.',2]], ru:'ики кило доматэс', sc:'🍅⚖️',
+   hook:'Двое икают у весов, а помидоры живут в домике. После числа турки не ставят «много»: iki kilo, а не «kilolar».', when:'На рынке.'},
+  {p:[['Abi,','брат'],['ne kadar?','сколько']], nat:[['Брат,',0],['сколько?',1]], ru:'аби, нэ кадар', sc:'🧢💰',
+   hook:'Продавец в «Абибасе» и «не кадр» — самая частая фраза рынка.', when:'На рынке, у таксиста, в лавке.'},
+  {p:[['Teyze,','тётя'],['günaydın!','доброе утро']], nat:[['Доброе утро,',1],['тётя!',0]], ru:'тейзе, гюнайдын', sc:'👵🌅',
+   hook:'Гну с дыней здоровается с тётей с тейзером. Обращение — впереди.', when:'Соседке, продавщице утром.'},
+  {p:[['Yarın','завтра'],['görüşürüz!','увидимся']], nat:[['Увидимся',1],['завтра!',0]], ru:'ярын гёрюшюрюз', sc:'🎒🎡',
+   hook:'Гарри шуршит рюкзаком, а за ним афиша ярмарки. «Когда» — впереди.', when:'Прощаешься до завтра.'},
+  {p:[['Hocam,','учитель'],['teşekkür ederim.','спасибо']], nat:[['Спасибо,',1],['учитель.',0]], ru:'ходжам, тешекюр эдерим', sc:'👳🐔',
+   hook:'Тысяча кур кланяется Ходже. Hocam говорят и врачу, и мастеру.', when:'Врачу, учителю, мастеру.'},
+  // набор 5 «Город и транспорт»
+  {p:[['Otobüs','автобус'],['yok!','нет (ёк!)']], nat:[['Автобуса',0],['нет!',1]], ru:'отобюс йок', sc:'🚌🎩',
+   hook:'Федя на остановке, а фокусник: «Ёк!»', when:'Ждёшь на остановке.'},
+  {p:[['Taksi,','такси'],['lütfen!','пожалуйста']], nat:[['Такси,',0],['пожалуйста!',1]], ru:'такси, лютфен', sc:'🚕💨',
+   hook:'Фокусник ловит такси, лютый фен — вежливость.', when:'Вызываешь или ловишь такси.'},
+  {p:[['Bilet','билет'],['ne kadar?','сколько']], nat:[['Сколько стоит',1],['билет?',0]], ru:'билет нэ кадар', sc:'🎫💰',
+   hook:'«Не кадр» — сколько? Вопрос в конце.', when:'На вокзале, в автобусе, в музее.'},
+  {p:[['Dolmuş','маршрутка'],['var','есть'],['mı?','?']], nat:[['Маршрутка',0],['есть?',1]], ru:'долмуш вар мы', sc:'🚐🚏',
+   hook:'Маршрутка-долма и дурак на остановке.', when:'На остановке.'},
+  {p:[['Plaj','пляж'],['çok','очень'],['güzel!','красивый']], nat:[['Пляж',0],['очень',1],['красивый!',2]], ru:'пляж чок гюзель', sc:'🏖️🦢',
+   hook:'Кошка в кедах загорает, гусь любуется собой.', when:'На море в Мерсине.'},
+  {p:[['Benzin','бензин'],['çok','очень'],['pahalı!','дорогой']], nat:[['Бензин',0],['очень',1],['дорогой!',2]], ru:'бензин чок пахалы', sc:'⛽😱',
+   hook:'Федя пахал — а бензин всё дороже.', when:'На заправке.'},
+  // набор 6 «Здоровье и тело»
+  {p:[['Baş','голова'],['+ım','моя'],['ağrı','боль'],['+yor','сейчас']], nat:[['У меня',1],['болит',3],['голова.',0]], ru:'башым ааррыйор', sc:'🤕🧠',
+   hook:'Йода сказал бы: «Голова моя болит-сейчас». Башка + пират «А-р-р!».', when:'У врача, в аптеке, дома.'},
+  {p:[['Ateş','жар'],['var.','есть']], nat:[['Есть',1],['температура.',0]], ru:'атэш вар', sc:'🌡️🔥',
+   hook:'Атас, жар — есть (var).', when:'У врача, звонишь на работу.'},
+  {p:[['Doktor','врач'],['var','есть'],['mı?','?']], nat:[['Врач',0],['есть?',1]], ru:'доктор вар мы', sc:'👨‍⚕️🤧',
+   hook:'Больной Терминатор стучит к доктору.', when:'В больнице, в отеле.'},
+  {p:[['İlaç,','лекарство'],['lütfen.','пожалуйста']], nat:[['Лекарство,',0],['пожалуйста.',1]], ru:'иляч, лютфен', sc:'💊💨',
+   hook:'«Эх, занемог!» в аптеке, лютый фен — вежливость.', when:'В аптеке.'},
+  {p:[['Çok','очень'],['yorgun','усталый'],['+um','я']], nat:[['Я',2],['очень',0],['устал.',1]], ru:'чок йоргунум', sc:'🧘😩',
+   hook:'Йога завязала узлом. -um — «я» в конце, как в «gidiyorum».', when:'После работы, после рынка.'},
+  {p:[['Bugün','сегодня'],['çok','очень'],['sıcak!','жарко']], nat:[['Сегодня',0],['очень',1],['жарко!',2]], ru:'бугюн чок сыджак', sc:'💃☀️',
+   hook:'Буги-вуги плавится на жаре, сыч жарится.', when:'Летом в Мерсине — каждый день.'},
+  // набор 7 «Кафе и еда-2»
+  {p:[['Bir','один'],['bira,','пиво'],['lütfen.','пожалуйста']], nat:[['Одно',0],['пиво,',1],['пожалуйста.',2]], ru:'бир бира, лютфен', sc:'🍺💨',
+   hook:'Beer-beer! bir — «один», bira — «пиво». Лютый фен сдувает пену.', when:'В кафе, на пляже.'},
+  {p:[['Çorba','суп'],['çok','очень'],['lezzetli!','вкусный']], nat:[['Суп',0],['очень',1],['вкусный!',2]], ru:'чорба чок лезетли', sc:'🍲🥂',
+   hook:'Зять лез в бабушкин суп и чокается ложкой: очень вкусно!', when:'В гостях, в локанте — повар будет счастлив.'},
+  {p:[['Süt','молоко'],['var','есть'],['mı?','?']], nat:[['Молоко',0],['есть?',1]], ru:'сют вар мы', sc:'🃏🎩',
+   hook:'Шут просит молока, а фокусник разводит руками: «Yok!»', when:'В бакале, в кафе к кофе.'},
+  {p:[['Çatal,','вилка'],['bıçak,','нож'],['lütfen.','пожалуйста']], nat:[['Вилку,',0],['нож,',1],['пожалуйста.',2]], ru:'чатал, бычак, лютфен', sc:'🍴🐂',
+   hook:'Федя с вилкой из чата и бычок с ножом идут к столу.', when:'В кафе, когда еду принесли без приборов.'},
+  {p:[['Şarap','вино'],['yok,','нет'],['bira','пиво'],['var.','есть']], nat:[['Вина',0],['нет,',1],['пиво',2],['есть.',3]], ru:'шарап ёк, бира вар', sc:'🎩🍺',
+   hook:'Фокусник: вино — ёк! Зато из шляпы — кружка пива.', when:'Ответ официанта в кафе.'},
+  // набор 8 «Время и дни недели»
+  {p:[['Saat','час'],['kaç?','сколько']], nat:[['Который',1],['час?',0]], ru:'саат кач', sc:'⏰🎠',
+   hook:'Йода сказал бы: «Час — сколько?» Часы из сада катаются на качелях.', when:'На улице, на работе.'},
+  {p:[['Bekle,','подожди'],['bir','один'],['dakika!','минута']], nat:[['Подожди,',0],['минутку!',2]], ru:'бекле, бир дакика', sc:'🥓🏎️',
+   hook:'Бекон жарится, а гонщик «Дакара» ждёт одну минуту. Турки говорят «bir dakika» сто раз в день.', when:'Везде: в магазине, по телефону, в очереди.'},
+  {p:[['Bugün','сегодня'],['pazar.','воскресенье']], nat:[['Сегодня',0],['воскресенье.',1]], ru:'бугюн пазар', sc:'🕺🧺',
+   hook:'Буги-вуги на базаре: воскресенье — и базар.', when:'В Мерсине в каждом районе свой базар.'},
+  {p:[['Her','каждый'],['gün','день'],['çay!','чай']], nat:[['Каждый',0],['день',1],['чай!',2]], ru:'хер гюн чай', sc:'🦬🍵',
+   hook:'Гну пьёт чай из стаканчика-тюльпана каждый день. her звучит грубовато, но значит «каждый».', when:'Про турецкую жизнь: чай — каждый день.'},
+  {p:[['İyi','хороший'],['gece','ночь'],['+ler','(много)']], nat:[['Спокойной',0],['ночи!',1]], ru:'ийи геджелер', sc:'🌙😴',
+   hook:'«И-и!» — хорошо, «где же?» — ночь. Как iyi akşamlar, только ночью.', when:'Перед сном; уходя поздно из гостей.'},
+  {p:[['Hemen','сразу'],['gel!','иди сюда']], nat:[['Иди сюда',1],['сейчас же!',0]], ru:'хемен гель', sc:'💪🧴',
+   hook:'Хи-Мен зовёт, и гель сам ползёт к тебе: иди сюда сейчас же!', when:'Ребёнку, коту, другу.'},
+  // набор 9 «Магазин и одежда»
+  {p:[['İndirim','скидка'],['var','есть'],['mı?','?']], nat:[['Скидка',0],['есть?',1]], ru:'индирим вар мы', sc:'🦃❓',
+   hook:'Индюк со скидкой — есть (var)? Спрашивать можно везде, турки не обижаются.', when:'В магазине одежды, на рынке.'},
+  {p:[['Elbise','платье'],['ne kadar?','сколько']], nat:[['Сколько',1],['стоит',-1],['платье?',0]], ru:'эльбисе нэ кадар', sc:'👗💰',
+   hook:'Певица «на бис» спрашивает цену платья. ne kadar — «не кадр, а цена!»', when:'В магазине, на рынке.'},
+  {p:[['Mağaza','магазин'],['açık','открыт'],['mı?','?']], nat:[['Магазин',0],['открыт?',1]], ru:'мааза ачык мы', sc:'🏬✂️',
+   hook:'Ножницы — чик! — открыт ли магазин?', when:'Вечером, в праздник, в воскресенье.'},
+  {p:[['Pazar','воскресенье'],['kapalı.','закрыто']], nat:[['В воскресенье',0],['закрыто.',1]], ru:'пазар капалы', sc:'🧺🚪',
+   hook:'Базар-воскресенье, а с двери капало — закрыто. Табличка, которую видишь часто.', when:'Табличка на двери магазина.'},
+  {p:[['Yeni','новая'],['çanta','сумка'],['çok','очень'],['güzel!','красивая']], nat:[['Новая',0],['сумка',1],['очень',2],['красивая!',3]], ru:'йени чанта чок гюзель', sc:'👜🦢',
+   hook:'Джеки Чан с новой сумкой любуется в зеркале, как гусь.', when:'Похвалить обновку. Ответ: «Teşekkür ederim!»'},
+  // набор 10 «Погода и цвета»
+  {p:[['Hava','погода'],['çok','очень'],['güzel!','красивая']], nat:[['Погода',0],['чудесная!',2]], ru:'хава чок гюзель', sc:'🌴🦢',
+   hook:'Гавана, гусь у зеркала: погода — красота!', when:'С соседом у подъезда — лучший разговор ни о чём.'},
+  {p:[['Bugün','сегодня'],['yağmur','дождь'],['var.','есть']], nat:[['Сегодня',0],['дождь.',1]], ru:'бугюн яамур вар', sc:'🕺🌧️',
+   hook:'Буги-вуги под дождём, котёнок: «Я — мур!» var — «есть»: «сегодня дождь есть».', when:'Прогноз, разговор с соседом.'},
+  {p:[['Çok','очень'],['soğuk!','холодно']], nat:[['Очень',0],['холодно!',1]], ru:'чок соук', sc:'🥂🥶',
+   hook:'Чокнулись — и сосулька на носу. В Мерсине так говорят уже при +15.', when:'Зимой в Мерсине — при +15.'},
+  {p:[['Kar','снег'],['yok,','нет'],['güneş','солнце'],['var.','есть']], nat:[['Снега',0],['нет,',1],['солнце',2],['есть.',3]], ru:'кар ёк, гюнеш вар', sc:'🎩☀️',
+   hook:'Фокусник: снег — ёк! А гну выносит солнце.', when:'Зима в Мерсине.'},
+  {p:[['Kırmızı','красное'],['elbise','платье'],['çok','очень'],['güzel!','красивое']], nat:[['Красное',0],['платье',1],['очень',2],['красивое!',3]], ru:'кырмызы эльбисе чок гюзель', sc:'🧱👗',
+   hook:'Певица «на бис» в платье цвета кирпича.', when:'В магазине, в гостях — комплимент.'},
+  // набор 11 «Семья и люди»
+  {p:[['İsm','имя'],['+in','твоё'],['ne?','что']], nat:[['Как',2],['тебя',1],['зовут?',0]], ru:'исмин нэ', sc:'🍇❓',
+   hook:'Йода сказал бы: «Имя твоё — что?» Изюминка с бейджиком отвечает первой.', when:'Знакомство: ребёнку, соседу, новому коллеге.'},
+  {p:[['Yaş','возраст'],['+ın','твой'],['kaç?','сколько']], nat:[['Сколько',2],['тебе',1],['лет?',0]], ru:'яшын кач', sc:'🦎🎠',
+   hook:'Ящер на качелях: «Возраст твой — сколько?» Взрослым так в лоб не спрашивают, детям — можно.', when:'Ребёнку, на дне рождения.'},
+  {p:[['Evli','женат'],['mi','?'],['+sin?','ты']], nat:[['Ты',2],['женат?',0]], ru:'эвли мисин', sc:'🏠💍',
+   hook:'«С домом ты?» Пекарь-холостяк краснеет: «Hayır, bekarım!» — нет, холост.', when:'В Турции спросят на второй минуте знакомства.'},
+  {p:[['İyi','хорошо'],['ki','что'],['doğ','родиться'],['+dun!','ты (уже)']], nat:[['С днём рождения!',-1]], ru:'ийи ки доодун', sc:'🐕🎂',
+   hook:'Дословно: «Хорошо, что ты родился!» Дог и гну задувают свечи.', when:'День рождения — вместо «поздравляю».'},
+  {p:[['Hediye','подарок'],['var','есть'],['mı?','?']], nat:[['А подарок',0],['есть?',1]], ru:'хедийе вар мы', sc:'🎁🧒',
+   hook:'Внук-Тор встречает дядю: «Эх, дядя! А подарок есть?»', when:'Дети спрашивают всегда.'},
+  // набор 12 «Вежливость, работа и деньги»
+  {p:[['Maaş','зарплата'],['yok,','нет'],['borç','долг'],['var!','есть']], nat:[['Зарплаты',0],['нет,',1],['долги',2],['есть!',3]], ru:'мааш ёк, борч вар', sc:'💸🍲',
+   hook:'Фокусник: зарплата — ёк! Зато в тетради 40 тарелок борща в долг.', when:'Жалоба на жизнь — турки поймут и посмеются.'},
+  {p:[['Yarın','завтра'],['tatil,','отпуск'],['inşallah!','даст бог']], nat:[['Завтра',0],['отпуск,',1],['даст бог!',2]], ru:'ярын татиль, иншаллах', sc:'🎡🏝️',
+   hook:'Ярмарка, Таити — и «иншаллах»: может быть, может нет.', when:'Про любые планы — так и говорят.'},
+  {p:[['Yeni','новая'],['araba?','машина'],['Hayırlı olsun!','поздравляю']], nat:[['Новая',0],['машина?',1],['Поздравляю!',2]], ru:'йени араба? хайырлы олсун', sc:'🚗🤘',
+   hook:'Араб пересел со скакуна на новую машину, панк с хаером поздравляет.', when:'Новая машина, квартира, телефон, работа.'},
+  {p:[['Kusura bakma,','извини'],['bir','одну'],['dakika!','минуту']], nat:[['Извини,',0],['минутку!',2]], ru:'кусура бакма, бир дакика', sc:'🐕⏱️',
+   hook:'Собака сделала «кусь», хозяин извиняется — и гонщик «Дакара» ждёт минутку.', when:'Опоздал, отвлёкся, перебил.'},
+  {p:[['Patron','начальник'],['çok','очень'],['yorgun.','усталый']], nat:[['Начальник',0],['очень',1],['устал.',2]], ru:'патрон чок йоргун', sc:'🧔🧘',
+   hook:'Патрон с сигарой после йоги завязан узлом.', when:'Сплетни у кулера.'},
+  // набор 13 «Природа и звери»
+  {p:[['Ağaç','дерево'],['+ta','на'],['kedi','кошка'],['var.','есть']], nat:[['На',1],['дереве',0],['кошка.',2]], ru:'аачта кеди вар', sc:'🌳🐈',
+   hook:'Йода сказал бы: «Дерево-на кошка есть». — Слезай! — Ага, щас!', when:'Кошка опять на дереве — так и кричат.'},
+  {p:[['Dağ','гора'],['+da','на'],['kar','снег'],['var.','есть']], nat:[['На',1],['горе',0],['снег.',2]], ru:'даада кар вар', sc:'⛰️❄️',
+   hook:'Альпинист: «Да-а-а!» — а ворона на вершине: «Кар!»', when:'Зимой с моря видно Тавры в снегу.'},
+  {p:[['Göl','озеро'],['çok','очень'],['güzel!','красивое']], nat:[['Озеро',0],['очень',1],['красивое!',2]], ru:'гёль чок гюзель', sc:'🏞️🦢',
+   hook:'Гусь любуется собой в озере — а сзади мяч: «Гол!»', when:'Прогулка, фото, открытка.'},
+  {p:[['Maymun','обезьяна'],['büyük,','большая'],['fare','мышь'],['küçük.','маленькая']], nat:[['Обезьяна',0],['большая,',1],['мышь',2],['маленькая.',3]], ru:'маймун бююк, фарэ кючюк', sc:'🐒🐭',
+   hook:'Обезьяна в майке — с буйвола, мышь с фарой — «кучи-кучи».', when:'Сравнить что угодно: большое — маленькое.'},
+  {p:[['Arı','пчела'],['yok,','нет'],['bal','мёд'],['yok.','нет']], nat:[['Нет',1],['пчёл —',0],['нет',3],['мёда.',2]], ru:'ары ёк, бал ёк', sc:'🐝🎩',
+   hook:'Фокусник «Ёк!»: пчела-певица ушла — и мёда на балу нет.', when:'Без труда — ничего: почти пословица.'},
+  // набор 14 «Я, ты и вопросы»
+  {p:[['Sen','ты'],['kim','кто'],['+sin?','(ты есть)']], nat:[['Ты',0],['кто?',1]], ru:'сен кимсин', sc:'🥋🚪',
+   hook:'Йода сказал бы: «Ты — кто — есть?» Сенсей открыл дверь, а там Ким.', when:'Незнакомцу — грубовато; вежливо: «Siz kimsiniz?»'},
+  {p:[['Nasıl','как'],['+sın?','ты (есть)'],['İyi','хорошо'],['+yim!','я (есть)']], nat:[['Как',0],['ты?',1],['—',-1],['Хорошо!',2]], ru:'насылсын? ийийим', sc:'😮‍💨🙂',
+   hook:'— Как ты? — Насилу дошёл… но отвечают всё равно: «İyiyim!»', when:'Каждая встреча — сосед, продавец, друг.'},
+  {p:[['Kedi','кошка'],['nerede?','где'],['Orada!','там']], nat:[['Где',1],['кошка?',0],['—',-1],['Там!',2]], ru:'кеди нэрэдэ? орада', sc:'🐈🐟',
+   hook:'Кошка в кедах там, где дорада. Всегда.', when:'Ищете что угодно.'},
+  {p:[['Biraz','немного'],['daha','ещё'],['çay?','чай']], nat:[['Ещё',1],['немного',0],['чаю?',2]], ru:'бираз даха чай', sc:'🍵🫖',
+   hook:'Коля за чаем — уже пятый тюльпанчик. «Ещё разок?» Отказ не принимается.', when:'В гостях у турок — всегда.'},
+  {p:[['Belki','может быть'],['yarın,','завтра'],['inşallah.','даст бог']], nat:[['Может быть,',0],['завтра,',1],['даст бог.',2]], ru:'белки ярын, иншаллах', sc:'🐿️🎡',
+   hook:'Белки на ярмарке гадают на ромашке: может, завтра, иншаллах.', when:'Мастер, сосед, чиновник — на «когда сделаете?».'}
+];
+// у кусочков с «(…)» нет своего русского слова — это вагончик-окончание
+var CL=['c0','c1','c2','c3','c4'];
+// рисунки «Тёмы» (assets/img); если рисунка нет — эмодзи
+var NOPIC={};
+function slug(tr){return tr.split(' ')[0].replace(/[çşıöüğ]/g,function(c){return {'ç':'c','ş':'s','ı':'i','ö':'o','ü':'u','ğ':'g'}[c]})}
+var IMGNAME={'kapı zili':'kapizili','iyi':'iyiadj'};  // когда первое слово совпадает с другим словом
+// рисунка нет (ещё не нарисован, файл потерялся) — вместо пустой рамки эмодзи-сцена
+function noImg(el){var d=document.createElement('div');d.className='scene';d.setAttribute('aria-hidden','true');d.textContent=el.getAttribute('data-sc');el.replaceWith(d)}
+function pic(w){return NOPIC[w.tr]?'<div class="scene" aria-hidden="true">'+w.sc+'</div>':'<img class="pic" src="img/'+(IMGNAME[w.tr]||slug(w.tr))+'.svg" alt="'+esc(w.hook)+'" data-sc="'+esc(w.sc)+'" onerror="noImg(this)">'}
+function ppic(i){return '<img class="pic" src="img/p'+(i<10?'0':'')+i+'.svg" alt="'+esc(P[i].hook)+'" data-sc="'+esc(P[i].sc)+'" onerror="noImg(this)">'}
+var DAY=864e5, GAPS=[1,3,7,14,30];  // интервалы повторения, дни
+var KEY='tk-v1', S={};
+try{S=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+// ключ прогресса — само слово (раньше был номер: вставка слова в середину сдвинула бы чужой прогресс)
+function wk(i){return 'w:'+W[i].tr}
+function pk(i){return 'p:'+phPlain(P[i])}
+(function migrate(){if(S._v===2)return;var o=S;S={_v:2};
+  Object.keys(o).forEach(function(k){var m;
+    if(/^\d+$/.test(k)&&W[+k])S[wk(+k)]=o[k];
+    else if((m=/^p(\d+)$/.exec(k))&&P[+m[1]])S[pk(+m[1])]=o[k]});
+  // уже узнанные слова — в повторение не с нуля
+  Object.keys(S).forEach(function(k){var s=S[k];if(k!=='_v'&&s.streak>0&&!s.due){s.box=s.streak>=3?2:1;s.due=Date.now()+GAPS[s.box]*DAY}});
+  save()})();
+function st(k){return S[k]||(S[k]={streak:0,mine:''})}
+function known(k){return st(k).streak>=3}
+
+// повторение по времени (этап 1): слово само возвращается через 1 день, 3 дня, неделю, 2 недели, месяц.
+// Ошибка — снова с завтрашнего дня и с подсказкой. Ответ раньше срока коробку не двигает.
+function rpSeen(s,now){if(!s.due){s.box=0;s.due=now+GAPS[0]*DAY}}
+function rpAnswer(s,ok,now){
+  if(!ok){s.box=0;s.due=now+GAPS[0]*DAY;return}
+  if(!s.due){rpSeen(s,now);return}
+  if(now>=s.due){s.box=Math.min((s.box||0)+1,GAPS.length-1);s.due=now+GAPS[s.box]*DAY}}
+function isDue(s,now){return !!s.due&&now>=s.due}
+function pri(s,now){return (isDue(s,now)?-5:0)+s.streak}
+// слова, которые пора вспомнить, — сначала самые давние
+function dueWords(now){return W.map(function(_,i){return i}).filter(function(i){var s=S[wk(i)];return s&&isDue(s,now)})
+  .sort(function(a,b){return S[wk(a)].due-S[wk(b)].due})}
+// где остановился — продолжаем оттуда же
+var POS='tk-pos';
+function loadPos(){try{var p=JSON.parse(localStorage.getItem(POS)||'{}');return {w:(p.w|0)%W.length,p:(p.p|0)%P.length}}catch(e){return {w:0,p:0}}}
+function savePos(){try{localStorage.setItem(POS,JSON.stringify({w:idx,p:pidx}))}catch(e){}}
+
+// голос
+var trVoice=null;
+function pickVoice(){var v=speechSynthesis.getVoices();trVoice=v.find(function(x){return /^tr/i.test(x.lang)&&/google/i.test(x.name)})||v.find(function(x){return /^tr/i.test(x.lang)})||null;
+  document.getElementById('vwarn').hidden=!!trVoice||!v.length}
+// в программе для Android голос — синтезатор телефона через мост Android.speak (в WebView нет speechSynthesis)
+var IN_APP=!!window.Android;
+// сайт-приложение: офлайн-кэш только на сайте (в APK страница — файл, там не нужен и не работает)
+if(!IN_APP&&/^https?:$/.test(location.protocol)&&'serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}
+window.onTts=function(ok){var w=document.getElementById('vwarn');
+  if(ok){w.hidden=true;return}
+  w.hidden=false;w.innerHTML='На телефоне нет турецкого голоса — слова не прозвучат. <button type="button" id="inst" style="margin-top:8px;border:0;border-radius:12px;padding:8px 12px;font-weight:700">Установить турецкий голос</button>';
+  document.getElementById('inst').onclick=function(){Android.installVoice()}};
+if(IN_APP){setTimeout(function(){window.onTts(Android.hasTurkish())},2500)}
+else if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
+function speak(t){if(IN_APP){Android.speak(t);return}if(!('speechSynthesis' in window))return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang='tr-TR';if(trVoice)u.voice=trVoice;u.rate=.8;speechSynthesis.speak(u)}
+
+var mode='learn', set='w', app=document.getElementById('app');
+var _pos=loadPos(), idx=_pos.w, pidx=_pos.p, steps=0;
+function esc(s){return s.replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function count(){var L=set==='w'?W:P,k=L.filter(function(_,i){return known(set==='w'?wk(i):pk(i))}).length,d=set==='w'?dueWords(Date.now()).length:0;
+  var c=document.getElementById('count'),tr=document.getElementById('track'),pos=set==='w'?idx:pidx;
+  // при листании — где вы и сколько осталось (пользователь: «непонятно, сколько ещё листать»); в проверке — как раньше
+  if(mode==='learn'||mode==='phr'){
+    c.innerHTML='<b>'+(set==='w'?'Слово ':'Фраза ')+(pos+1)+' из '+L.length+'</b>ещё '+(L.length-pos-1)+(k?' · знаете '+k:'')+(d?' · вспомнить '+d:'');
+    tr.hidden=false;document.getElementById('trackfill').style.width=((pos+1)/L.length*100).toFixed(1)+'%'}
+  else{c.textContent=(set==='w'?'Слов':'Фраз')+' узнаёте: '+k+' из '+L.length+(d?' · вспомнить: '+d:'');tr.hidden=true}}
+function phTr(x){return x.p.map(function(q,i){var t=q[0],glue=t[0]==='+';return (i&&!glue?' ':'')+'<span class="'+CL[i]+'">'+(glue?t.slice(1):t)+'</span>'}).join('')}
+function phPlain(x){return x.p.map(function(q,i){var t=q[0];return t[0]==='+'?t.slice(1):(i?' ':'')+t}).join('')}
+function phNat(x){return x.nat.map(function(q){return q[1]<0?q[0]:'<span class="'+CL[q[1]]+'">'+q[0]+'</span>'}).join(' ').replace(/ (?=<span[^>]*> —)/,'').replace(/ —/,' —')}
+function phNatPlain(x){return x.nat.map(function(q){return q[0]}).join(' ').replace(/\s+—/,' —')}
+function phrases(){
+  var x=P[pidx], k=pk(pidx), gone=known(k);
+  rpSeen(st(k),Date.now());save();savePos();
+  app.innerHTML='<div class="card pop">'+
+    ppic(pidx)+
+    '<p class="ph-tr" lang="tr">'+phTr(x)+'</p>'+
+    '<button class="say" type="button" id="say">🔊 «'+x.ru+'»</button>'+
+    '<div class="lay"><h3>Как сказал бы Йода</h3><div class="chips">'+x.p.map(function(q,i){return '<span class="'+CL[i]+'">'+q[1]+'</span>'}).join('')+'</div></div>'+
+    '<div class="lay"><h3>По-русски</h3><div class="nat">'+phNat(x)+'</div></div>'+
+    '<div class="hook'+(gone?' gone':'')+'">'+(gone?'<div class="snd">Эту фразу вы уже узнаёте — подсказка убрана.</div>':'<div class="snd">Зацепка</div><p>'+x.hook+'</p>')+'</div>'+
+    '<p class="when"><b>Когда говорят</b>'+x.when+'</p>'+
+  '</div>'+
+  '<div class="nav"><button class="prev" type="button" id="prev">Назад</button><button class="next" type="button" id="next">Дальше</button></div>';
+  document.getElementById('say').onclick=function(){speak(phPlain(x))};
+  document.getElementById('prev').onclick=function(){pidx=(pidx+P.length-1)%P.length;phrases()};
+  document.getElementById('next').onclick=function(){pidx=(pidx+1)%P.length;phrases();speak(phPlain(P[pidx]))};
+  count();
+}
+function nextPQ(){
+  var pool=P.map(function(_,i){return i}).filter(function(i){return i!==qi});
+  var now=Date.now();
+  pool.sort(function(a,b){return pri(st(pk(a)),now)-pri(st(pk(b)),now)+Math.random()*2-1});
+  qi=pool[0];var x=P[qi],k=pk(qi);
+  var opts=shuffle([qi].concat(shuffle(P.map(function(_,i){return i}).filter(function(i){return i!==qi})).slice(0,3)));
+  app.innerHTML='<div class="card pop"><p class="q">Что значит?</p><p class="ph-tr" lang="tr">'+phTr(x)+'</p><button class="say" type="button" id="say">🔊 <b>послушать</b></button>'+
+    '<div class="opts">'+opts.map(function(o){return '<button type="button" data-i="'+o+'">'+phNatPlain(P[o])+'</button>'}).join('')+'</div><div class="verdict" id="verdict" aria-live="polite"></div></div>'+
+    '<div class="nav"><button class="next" type="button" id="next">Следующее</button></div>';
+  document.getElementById('say').onclick=function(){speak(phPlain(x))};speak(phPlain(x));
+  var answered=false;
+  app.querySelectorAll('.opts button').forEach(function(b){b.onclick=function(){
+    if(answered)return;answered=true;var ok=+b.dataset.i===qi,s=st(k),was=known(k);
+    b.classList.add(ok?'right':'wrong');if(!ok)app.querySelector('.opts button[data-i="'+qi+'"]').classList.add('right');
+    s.streak=ok?s.streak+1:0;rpAnswer(s,ok,Date.now());save();
+    var v=document.getElementById('verdict');
+    v.textContent=ok?(known(k)&&!was?'Верно! Эту фразу вы теперь узнаёте.':'Верно!'):'Дословно: '+x.p.map(function(q){return q[1]}).join(' · ');
+    v.style.color=ok?'var(--ok)':'var(--bad)';count();
+  }});
+  document.getElementById('next').onclick=nextPQ;count();
+}
+
+function learn(){
+  var w=W[idx], s=st(wk(idx)), gone=known(wk(idx));
+  rpSeen(s,Date.now());save();savePos();
+  var hook=s.mine?'<div class="snd">Ваше: <mark>'+esc(s.mine)+'</mark></div><p>'+w.hook+'</p>':'<div class="snd">Похоже на: '+w.snd+'</div><p>'+w.hook+'</p>';
+  app.innerHTML='<div class="card pop">'+
+    pic(w)+
+    '<p class="word" lang="tr">'+w.tr+'</p>'+
+    '<button class="say" type="button" id="say">🔊 «'+w.ru+'»</button>'+
+    '<p class="mean">'+w.m+'</p>'+
+    '<div class="hook'+(gone?' gone':'')+'">'+(gone?'<div class="snd">Вы это слово уже узнаёте — подсказка убрана.</div><p>Показать: '+(s.mine?esc(s.mine):w.snd.replace(/<[^>]+>/g,''))+'</p>':hook)+'</div>'+
+  '</div>'+
+  '<div class="nav"><button class="prev" type="button" id="prev">Назад</button><button class="next" type="button" id="next">Дальше</button></div>';
+  document.getElementById('say').onclick=function(){speak(w.tr)};
+  document.getElementById('prev').onclick=function(){idx=(idx+W.length-1)%W.length;learn()};
+  document.getElementById('next').onclick=forward;
+  count();
+}
+// «Дальше»: через раз, если есть что вспомнить, вместо нового слова — карточка «Вспомните?»
+function forward(){steps++;var d=dueWords(Date.now()).filter(function(i){return i!==idx});
+  if(steps%2===0&&d.length){recall(d[0]);return}
+  idx=(idx+1)%W.length;learn();speak(W[idx].tr)}
+// мягкое повторение: сначала звук и слово, картинка и смысл — после ответа; без оценок
+function recall(i){
+  var w=W[i], k=wk(i), s=st(k);
+  app.innerHTML='<div class="card pop"><p class="q">Вспомните?</p>'+
+    '<p class="word" lang="tr">'+w.tr+'</p>'+
+    '<button class="say" type="button" id="say">🔊 «'+w.ru+'»</button>'+
+    '<div class="opts" id="ans"><button type="button" id="yes">Помню</button><button type="button" id="no">Не помню</button></div>'+
+    '<div id="rev"></div></div>'+
+    '<div class="nav"><button class="prev" type="button" id="prev">Назад</button><button class="next" type="button" id="next">Дальше</button></div>';
+  document.getElementById('say').onclick=function(){speak(w.tr)};speak(w.tr);
+  function answer(ok){
+    rpAnswer(s,ok,Date.now());if(!ok)s.streak=0;save();
+    document.getElementById('ans').remove();
+    document.getElementById('rev').innerHTML=pic(w)+'<p class="mean">'+w.m+'</p>'+
+      '<div class="hook"><div class="snd">'+(ok?'Отлично! ':'')+'Похоже на: '+(s.mine?'<mark>'+esc(s.mine)+'</mark>':w.snd)+'</div>'+(ok?'':'<p>'+w.hook+'</p>')+'</div>';
+    count()}
+  document.getElementById('yes').onclick=function(){answer(true)};
+  document.getElementById('no').onclick=function(){answer(false)};
+  document.getElementById('prev').onclick=learn;
+  document.getElementById('next').onclick=forward;
+  count();
+}
+
+// проверка: два вида вопросов — «услышал/увидел турецкое → что значит» и «картинка → какое слово»
+var qi=-1;
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function nextQ(){
+  var pool=W.map(function(_,i){return i}).filter(function(i){return i!==qi});
+  // чаще спрашиваем то, что ещё не узнаётся
+  var now=Date.now();
+  pool.sort(function(a,b){return pri(st(wk(a)),now)-pri(st(wk(b)),now)+Math.random()*2-1});
+  qi=pool[0];var w=W[qi], kind=Math.random()<.5?'mean':'word';
+  var others=shuffle(W.map(function(_,i){return i}).filter(function(i){return i!==qi})).slice(0,3);
+  var opts=shuffle([qi].concat(others));
+  var q= kind==='mean'
+    ? '<p class="q">Что значит?</p><p class="word" lang="tr">'+w.tr+'</p><button class="say" type="button" id="say">🔊 <b>послушать</b></button>'
+    : '<p class="q">Какое это слово?</p>'+pic(w)+'<p class="mean">'+w.m+'</p>';
+  app.innerHTML='<div class="card pop">'+q+'<div class="opts">'+opts.map(function(o){return '<button type="button" data-i="'+o+'"'+(kind==='word'?' lang="tr"':'')+'>'+(kind==='mean'?W[o].m:W[o].tr)+'</button>'}).join('')+'</div><div class="verdict" id="verdict" aria-live="polite"></div></div>'+
+    '<div class="nav"><button class="next" type="button" id="next">Следующее</button></div>';
+  if(kind==='mean'){document.getElementById('say').onclick=function(){speak(w.tr)};speak(w.tr)}
+  var answered=false;
+  app.querySelectorAll('.opts button').forEach(function(b){b.onclick=function(){
+    if(answered)return;answered=true;var ok=+b.dataset.i===qi, s=st(wk(qi));
+    b.classList.add(ok?'right':'wrong');
+    if(!ok)app.querySelector('.opts button[data-i="'+qi+'"]').classList.add('right');
+    var was=known(wk(qi)); s.streak=ok?s.streak+1:0; rpAnswer(s,ok,Date.now()); save();
+    var v=document.getElementById('verdict');
+    v.textContent= ok?(known(wk(qi))&&!was?'Верно! Слово «'+w.tr+'» вы теперь узнаёте — подсказка убрана.':'Верно!'):'Это «'+w.tr+'» — '+w.m+'. Вспомните: '+(s.mine||w.snd.replace(/<[^>]+>/g,''))+'.';
+    v.style.color=ok?'var(--ok)':'var(--bad)';
+    if(kind==='word')speak(w.tr);
+    count();
+  }});
+  document.getElementById('next').onclick=nextQ;
+  count();
+}
+
+function setMode(m){mode=m;if(m==='learn')set='w';if(m==='phr')set='p';
+  ['tLearn','tPhr','tCheck'].forEach(function(id,i){document.getElementById(id).setAttribute('aria-pressed',String(['learn','phr','check'][i]===m))});
+  document.getElementById('tCheck').textContent=m==='check'?(set==='w'?'Проверка: слова':'Проверка: фразы'):'Проверить себя';
+  m==='learn'?learn():m==='phr'?phrases():(set==='w'?nextQ():nextPQ())}
+document.getElementById('tLearn').onclick=function(){setMode('learn')};
+document.getElementById('tPhr').onclick=function(){setMode('phr')};
+document.getElementById('tCheck').onclick=function(){setMode('check')};
+setMode('learn');
+</script>
+</body>
+</html>
