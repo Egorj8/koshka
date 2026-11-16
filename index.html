@@ -721,14 +721,15 @@ function speak(t){if(IN_APP){Android.speak(t);return}if(!('speechSynthesis' in w
 // звук выключен — тихо (выбор помнится); турецкое слово звучит после «вжуха», не поверх.
 var SFX_KEY='tk-sfx', sfxOn=true, AC=null;
 try{sfxOn=localStorage.getItem(SFX_KEY)!=='0'}catch(e){}
-function sfx(){if(!sfxOn)return 0;try{
+// back — «Назад»: тот же шорох, но тон вниз (листаем обратно)
+function sfx(back){if(!sfxOn)return 0;try{
   if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();
-  var c=AC,t=c.currentTime,b=c.createBuffer(1,Math.ceil(c.sampleRate*.3),c.sampleRate),d=b.getChannelData(0);
+  var c=AC,t=c.currentTime,b=c.createBuffer(1,Math.ceil(c.sampleRate*.2),c.sampleRate),d=b.getChannelData(0);
   for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1;
   var n=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();n.buffer=b;
-  f.type='bandpass';f.Q.value=3;f.frequency.setValueAtTime(500,t);f.frequency.exponentialRampToValueAtTime(4500,t+.22);
-  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.7,t+.04);g.gain.exponentialRampToValueAtTime(.0001,t+.26);
-  n.connect(f);f.connect(g);g.connect(c.destination);n.start(t);n.stop(t+.3);return 260}catch(e){return 0}}
+  f.type='bandpass';f.Q.value=1.4;f.frequency.setValueAtTime(back?2200:900,t);f.frequency.exponentialRampToValueAtTime(back?900:2200,t+.14);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.22,t+.03);g.gain.exponentialRampToValueAtTime(.0001,t+.17);
+  n.connect(f);f.connect(g);g.connect(c.destination);n.start(t);n.stop(t+.2);return 180}catch(e){return 0}}
 // «вжух», потом турецкое слово
 function sfxThen(fn){var ms=sfx();if(ms)setTimeout(fn,ms);else fn()}
 function sfxLabel(){var b=document.getElementById('sfxbtn');if(b)b.textContent=sfxOn?'🔊 включён':'🔇 выключен'}
@@ -776,7 +777,7 @@ function phrases(){
   '</div>'+
   '<div class="nav"><button class="prev" type="button" id="prev">Назад</button><button class="next" type="button" id="next">Дальше</button></div>';
   document.getElementById('say').onclick=function(){speak(phPlain(x))};
-  document.getElementById('prev').onclick=function(){pidx=(pidx+P.length-1)%P.length;phrases()};
+  document.getElementById('prev').onclick=function(){sfx(true);pidx=(pidx+P.length-1)%P.length;phrases()};
   document.getElementById('next').onclick=function(){pidx=(pidx+1)%P.length;phrases();sfxThen(function(){speak(phPlain(P[pidx]))})};
   count();
 }
@@ -815,7 +816,7 @@ function learn(){
   '</div>'+
   '<div class="nav"><button class="prev" type="button" id="prev">Назад</button><button class="next" type="button" id="next">Дальше</button></div>';
   document.getElementById('say').onclick=function(){speak(w.tr)};
-  document.getElementById('prev').onclick=function(){idx=(idx+W.length-1)%W.length;learn()};
+  document.getElementById('prev').onclick=function(){sfx(true);idx=(idx+W.length-1)%W.length;learn()};
   document.getElementById('next').onclick=forward;
   count();
 }
@@ -841,7 +842,7 @@ function recall(i){
     count()}
   document.getElementById('yes').onclick=function(){answer(true)};
   document.getElementById('no').onclick=function(){answer(false)};
-  document.getElementById('prev').onclick=learn;
+  document.getElementById('prev').onclick=function(){sfx(true);learn()};
   document.getElementById('next').onclick=forward;
   count();
 }
