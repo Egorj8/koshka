@@ -44,6 +44,9 @@ h1{font:900 24px/1.2 "Nunito",system-ui,sans-serif;margin:0;background:linear-gr
 .track{height:8px;border:2px solid var(--ink);border-radius:6px;background:var(--paper);margin:-4px 0 12px;overflow:hidden}
 .track i{display:block;height:100%;background:var(--lemon);transition:width .25s}
 .track[hidden]{display:none}
+/* «Новые ▸» — сразу к ещё не открытым (пользователь, 16.11.2026: «чтобы не проматывать то, что видел») */
+.newbtn{display:block;margin:-6px 0 12px auto;border:2px solid var(--ink);background:var(--lemon);border-radius:12px 14px 10px 13px;padding:4px 12px;font-weight:900;font-size:15px;box-shadow:2px 2px 0 var(--ink);transform:rotate(-.8deg)}
+.newbtn[hidden]{display:none}
 .tabs{display:flex;gap:8px;margin:0 0 14px}
 .tabs button{flex:1;border:3px solid var(--ink);background:var(--paper);font-weight:900;font-size:15px;line-height:1.2;padding:8px 4px;border-radius:var(--hand2);box-shadow:3px 3px 0 var(--ink)}
 .tabs button[aria-pressed="true"]{background:var(--lemon);transform:rotate(-1deg)}
@@ -107,6 +110,7 @@ h1{font:900 24px/1.2 "Nunito",system-ui,sans-serif;margin:0;background:linear-gr
 <div class="wrap">
   <header><h1>Кошка в кедах</h1><span class="count" id="count"></span></header>
   <div class="track" id="track" hidden><i id="trackfill"></i></div>
+  <button type="button" class="newbtn" id="newbtn" hidden></button>
   <div class="voice-warn" id="vwarn" hidden>В этом браузере нет турецкого голоса — слова не прозвучат. В Chrome на компьютере и на телефоне он обычно есть.</div>
   <div class="tabs" role="group" aria-label="Режим">
     <button type="button" id="tLearn" aria-pressed="true">Слова</button>
@@ -681,6 +685,9 @@ function pk(i){return 'p:'+phPlain(P[i])}
   save()})();
 function st(k){return S[k]||(S[k]={streak:0,mine:''})}
 function known(k){return st(k).streak>=3}
+function seen(k){return !!(S[k]&&S[k].due)}
+// первое ещё не открытое: сначала после текущего места, потом с начала; -1 — всё открыто
+function nextNew(L,key,from){for(var j=1;j<=L.length;j++){var i=(from+j)%L.length;if(!seen(key(i)))return i}return -1}
 
 // повторение по времени (этап 1): слово само возвращается через 1 день, 3 дня, неделю, 2 недели, месяц.
 // Ошибка — снова с завтрашнего дня и с подсказкой. Ответ раньше срока коробку не двигает.
@@ -735,6 +742,9 @@ function sfxThen(fn){var ms=sfx();if(ms)setTimeout(fn,ms);else fn()}
 function sfxLabel(){var b=document.getElementById('sfxbtn');if(b)b.textContent=sfxOn?'🔊 включён':'🔇 выключен'}
 document.getElementById('sfxbtn').onclick=function(){sfxOn=!sfxOn;try{localStorage.setItem(SFX_KEY,sfxOn?'1':'0')}catch(e){}sfxLabel();if(sfxOn)sfx()};
 sfxLabel();
+document.getElementById('newbtn').onclick=function(){
+  if(set==='w'){var i=nextNew(W,wk,idx);if(i<0)return;sfx();idx=i;learn();speak(W[idx].tr)}
+  else{var j=nextNew(P,pk,pidx);if(j<0)return;sfx();pidx=j;phrases();speak(phPlain(P[pidx]))}};
 var mode='learn', set='w', app=document.getElementById('app');
 var _pos=loadPos(), idx=_pos.w, pidx=_pos.p, steps=0;
 function esc(s){return s.replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -743,8 +753,10 @@ function count(){var L=set==='w'?W:P,k=L.filter(function(_,i){return known(set==
   // при листании — где вы и сколько осталось (пользователь: «непонятно, сколько ещё листать»); в проверке — как раньше
   if(mode==='learn'||mode==='phr'){
     c.innerHTML='<b>'+(set==='w'?'Слово ':'Фраза ')+(pos+1)+' из '+L.length+'</b>ещё '+(L.length-pos-1)+(k?' · знаете '+k:'')+(d?' · вспомнить '+d:'');
-    tr.hidden=false;document.getElementById('trackfill').style.width=((pos+1)/L.length*100).toFixed(1)+'%'}
-  else{c.textContent=(set==='w'?'Слов':'Фраз')+' узнаёте: '+k+' из '+L.length+(d?' · вспомнить: '+d:'');tr.hidden=true}}
+    tr.hidden=false;document.getElementById('trackfill').style.width=((pos+1)/L.length*100).toFixed(1)+'%';
+    var key=set==='w'?wk:pk,nn=L.filter(function(_,i){return !seen(key(i))}).length,nb=document.getElementById('newbtn');
+    nb.hidden=!nn;nb.textContent='Новые: '+nn+' ▸'}
+  else{c.textContent=(set==='w'?'Слов':'Фраз')+' узнаёте: '+k+' из '+L.length+(d?' · вспомнить: '+d:'');tr.hidden=true;document.getElementById('newbtn').hidden=true}}
 // Ударение в произношении (план: «сначала звук», 16.11.2026). В турецком ударение обычно на последнем слоге —
 // ставим само; исключения (имена-обращения, наречия, дни недели, заимствования) — списком. Проверить у носителя.
 var STRESS={'merhaba':'мэ́рхаба','lütfen':'лю́тфен','anne':'а́ннэ','baba':'ба́ба','masa':'ма́са','oda':'о́да','şimdi':'ши́мди',
