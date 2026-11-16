@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Кошка в кедах — для репетиторов</title>
+<meta name="description" content="Турецкие слова через смешные картинки и русские созвучия — домашка между уроками для ваших учеников.">
+<meta name="theme-color" content="#FBF6EA">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<!-- Страница для репетиторов турецкого в Мерсине (обкатка, 16.11.2026). Переключатель RU/TR; турецкий текст — проверить у носителя -->
+<style>
+:root{--paper:#FBF6EA;--ink:#1d1d1d;--lemon:#FFE45C;--sky:#7FD3FF;--pink:#FF8FB1;--mint:#8FE3B0;--muted:#5a5248}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.5 Nunito,system-ui,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px 48px}
+.lang{display:flex;justify-content:flex-end;gap:8px}
+.lang button{font:inherit;font-weight:900;border:2px solid var(--ink);background:#fff;border-radius:10px 12px 9px 11px;padding:4px 12px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--lemon);box-shadow:2px 2px 0 var(--ink)}
+h1{font-size:34px;line-height:1.15;margin:18px 0 6px;font-weight:900}
+.sub{font-size:19px;line-height:1.4;font-weight:700;color:var(--muted);margin:8px 0 0}
+h2{font-size:24px;margin:36px 0 12px;font-weight:900}
+.card{border:3px solid var(--ink);border-radius:18px 22px 16px 20px;background:#fff;padding:14px;box-shadow:3px 3px 0 var(--ink)}
+.ex{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+.ex .card{padding:10px}
+.ex img{width:100%;height:auto;display:block;border-radius:10px}
+.ex .w{font-weight:900;font-size:22px;margin:8px 4px 0}
+.ex .s{margin:2px 4px 4px;color:var(--muted)}
+.ex mark{background:var(--lemon);padding:0 4px;border-radius:4px;color:var(--ink)}
+.ex .card:nth-child(2){transform:rotate(.6deg)}
+.ex .card:nth-child(1){transform:rotate(-.6deg)}
+ul.list{padding:0;list-style:none;margin:0}
+ul.list li{padding:8px 0 8px 36px;position:relative}
+ul.list li::before{content:"✔";position:absolute;left:4px;top:6px;font-weight:900;font-size:20px;color:#2a9d5c}
+ol.steps{counter-reset:s;list-style:none;padding:0;margin:0}
+ol.steps li{counter-increment:s;padding:10px 0 10px 52px;position:relative}
+ol.steps li::before{content:counter(s);position:absolute;left:0;top:6px;width:38px;height:38px;border:3px solid var(--ink);border-radius:50% 46% 52% 48%;background:var(--sky);font-weight:900;display:grid;place-items:center}
+.pilot{background:var(--mint)}
+.pilot ul{margin:8px 0 0;padding-left:22px}
+.cta{display:inline-block;margin:24px 0 0;font-weight:900;font-size:20px;color:var(--ink);text-decoration:none;background:var(--lemon);border:3px solid var(--ink);border-radius:14px 18px 12px 16px;padding:12px 22px;box-shadow:3px 3px 0 var(--ink)}
+.cta:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.note{color:var(--muted);font-size:15px;margin-top:28px}
+[data-l]{display:none}
+html[lang="ru"] [data-l="ru"],html[lang="tr"] [data-l="tr"]{display:revert}
+html[lang="ru"] .cta[data-l="ru"],html[lang="tr"] .cta[data-l="tr"]{display:inline-block}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="lang"><button type="button" data-set="ru">Русский</button><button type="button" data-set="tr">Türkçe</button></div>
+
+  <h1>Кошка в кедах</h1>
+    <p class="sub" data-l="ru">Турецкие слова через смешные картинки и русские созвучия — домашка между уроками, которую ученики открывают сами.</p>
+    <p class="sub" data-l="tr">Rus öğrenciler için Türkçe kelimeler: komik resimler ve Rusça ses benzerlikleri. Dersler arasında öğrencilerin kendi isteğiyle açtığı bir ödev.</p>
+
+  <h2 data-l="ru">Как это работает</h2><h2 data-l="tr">Nasıl çalışıyor</h2>
+  <p data-l="ru">Каждое турецкое слово цепляется за похожее русское — и смешную картинку, которая ведёт к смыслу. Ученик не зубрит: он смеётся, и слово остаётся.</p>
+  <p data-l="tr">Her Türkçe kelime, kulağa benzer gelen bir Rusça kelimeye ve anlama götüren komik bir resme bağlanır. Öğrenci ezberlemez: güler ve kelime aklında kalır.</p>
+  <div class="ex">
+    <div class="card"><img src="img/kedi.svg" alt="" loading="lazy"><p class="w">kedi</p>
+      <p class="s" data-l="ru">кошка — <mark>кеды</mark>: кошка в кедах</p><p class="s" data-l="tr">kedi — Rusça <mark>«kedı»</mark> = spor ayakkabı: spor ayakkabılı kedi</p></div>
+    <div class="card"><img src="img/tesekkur.svg" alt="" loading="lazy"><p class="w">teşekkür ederim</p>
+      <p class="s" data-l="ru">спасибо — <mark>тысяча кур</mark> кланяются и благодарят</p><p class="s" data-l="tr">teşekkür — Rusça <mark>«tısyaça kur»</mark> = bin tavuk: bin tavuk eğilip teşekkür ediyor</p></div>
+    <div class="card"><img src="img/saray.svg" alt="" loading="lazy"><p class="w">saray</p>
+      <p class="s" data-l="ru">дворец — открываешь бабушкин <mark>сарай</mark>, а там султан</p><p class="s" data-l="tr">saray — Rusçada <mark>«saray»</mark> = ahır, köhne depo: ahırın kapısını açıyorsun, içeride padişah</p></div>
+  </div>
+
+  <h2 data-l="ru">Что внутри</h2><h2 data-l="tr">İçinde neler var</h2>
+  <ul class="list" data-l="ru">
+    <li><b>300 слов на каждый день</b> (уровень A1): приветствия, рынок и еда, дом и соседи, транспорт, врач, магазин, кафе, семья, погода, работа и деньги</li>
+    <li><b>100 фраз</b> цветными кусочками: видно, какое слово что значит, и турецкий порядок слов</li>
+    <li><b>Озвучка</b> каждого слова и фразы — спокойно и не быстро</li>
+    <li><b>«Вспомните?»</b> — мягкое повторение: забытое слово возвращается через 1, 3, 7, 14, 30 дней</li>
+    <li>Без регистрации, без рекламы, работает без интернета; телефон или компьютер</li>
+  </ul>
+  <ul class="list" data-l="tr">
+    <li><b>Günlük hayattan 300 kelime</b> (A1): selamlaşma, pazar ve yemek, ev ve komşular, ulaşım, doktor, mağaza, kafe, aile, hava durumu, iş ve para</li>
+    <li><b>100 cümle</b> renkli parçalarla: hangi kelimenin ne anlama geldiği ve Türkçe kelime sırası görünüyor</li>
+    <li>Her kelime ve cümle <b>sesli</b> — sakin ve yavaş</li>
+    <li><b>«Hatırlıyor musun?»</b> — yumuşak tekrar: unutulan kelime 1, 3, 7, 14, 30 gün sonra geri gelir</li>
+    <li>Kayıt yok, reklam yok, internetsiz çalışır; telefonda ya da bilgisayarda</li>
+  </ul>
+
+  <h2 data-l="ru">Как дать ученикам</h2><h2 data-l="tr">Öğrencilere nasıl verilir</h2>
+  <ol class="steps" data-l="ru">
+    <li>Отправьте ученику ссылку на программу.</li>
+    <li>На телефоне: меню браузера → «Добавить на главный экран» (iPhone: «Поделиться» → «На экран „Домой“»). Откроется как обычная программа.</li>
+    <li>10 минут в день между уроками — просто листать картинки.</li>
+    <li>На уроке спросите пару слов из пройденного — сразу видно, работает ли. Время урока остаётся на разговор.</li>
+  </ol>
+  <ol class="steps" data-l="tr">
+    <li>Öğrencinize programın bağlantısını gönderin.</li>
+    <li>Telefonda: tarayıcı menüsü → «Ana ekrana ekle» (iPhone: «Paylaş» → «Ana Ekrana Ekle»). Normal bir uygulama gibi açılır.</li>
+    <li>Dersler arasında günde 10 dakika — sadece resimlere bakmak yeterli.</li>
+    <li>Derste öğrendiklerinden birkaç kelime sorun — işe yarayıp yaramadığı hemen belli olur. Ders saati konuşmaya kalır.</li>
+  </ol>
+
+  <h2 data-l="ru">Чем это полезно вам</h2><h2 data-l="tr">Size faydası</h2>
+  <ul class="list" data-l="ru">
+    <li>Слова держатся — на уроке меньше повторять, больше говорить</li>
+    <li>Ученикам весело — меньше бросают на первых месяцах</li>
+    <li>Не замена вам: программа учит слова, вы — говорить и понимать</li>
+  </ul>
+  <ul class="list" data-l="tr">
+    <li>Kelimeler akılda kalıyor — derste daha az tekrar, daha çok konuşma</li>
+    <li>Öğrenciler eğleniyor — ilk aylarda bırakan daha az oluyor</li>
+    <li>Sizin yerinizi tutmaz: program kelime öğretir, siz konuşmayı ve anlamayı</li>
+  </ul>
+
+  <h2 data-l="ru">Сейчас — бесплатная обкатка</h2><h2 data-l="tr">Şimdi — ücretsiz deneme</h2>
+  <div class="card pilot">
+    <div data-l="ru">Программу делаем в Мерсине для русских, которые учат турецкий. Сейчас она бесплатна. Взамен просим:
+      <ul><li>проверить турецкий — нашли ошибку или неестественную фразу, напишите;</li>
+          <li>рассказать, как зашло ученикам: что смешит, что непонятно, открывают ли сами;</li>
+          <li>подсказать, чего не хватает вам как репетитору.</li></ul></div>
+    <div data-l="tr">Programı Mersin'de, Türkçe öğrenen Ruslar için yapıyoruz. Şu an ücretsiz. Karşılığında rica ediyoruz:
+      <ul><li>Türkçeyi kontrol edin — bir hata ya da doğal olmayan bir cümle görürseniz yazın;</li>
+          <li>öğrencilerin nasıl karşıladığını anlatın: neye gülüyorlar, neyi anlamıyorlar, kendileri açıyorlar mı;</li>
+          <li>bir öğretmen olarak size neyin eksik olduğunu söyleyin.</li></ul></div>
+  </div>
+
+  <a class="cta" href="./" data-l="ru">Открыть программу ▸</a><a class="cta" href="./" data-l="tr">Programı aç ▸</a>
+
+  <p class="note" data-l="ru">Вопросы и отзывы — тому, кто прислал вам эту ссылку. Совет: смотрите с телефона — так видят ученики.</p>
+  <p class="note" data-l="tr">Sorular ve yorumlar için bu bağlantıyı size gönderen kişiye yazın. İpucu: telefondan bakın — öğrenciler öyle görüyor.</p>
+</div>
+<script>
+// язык: ?lang=tr в ссылке, иначе — выбор с прошлого раза, иначе русский
+(function(){var key='tk-tutor-lang',l='ru';
+  try{l=localStorage.getItem(key)||l}catch(e){}
+  var q=/[?&]lang=(ru|tr)\b/.exec(location.search);if(q)l=q[1];
+  function set(x){document.documentElement.lang=x;
+    [].forEach.call(document.querySelectorAll('.lang button'),function(b){b.setAttribute('aria-pressed',String(b.dataset.set===x))});
+    try{localStorage.setItem(key,x)}catch(e){}}
+  [].forEach.call(document.querySelectorAll('.lang button'),function(b){b.onclick=function(){set(b.dataset.set)}});
+  set(l)})();
+</script>
+</body>
+</html>

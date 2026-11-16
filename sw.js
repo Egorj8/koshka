@@ -33,11 +33,13 @@ self.addEventListener('fetch', function (e) {
   var page = req.mode === 'navigate' || url.pathname.endsWith('/index.html');
   if (page) {
     // страница — сначала из сети (свежая версия), без сети — из кэша
+    // главная — под ключом 'index.html', другие страницы (tutor.html) — под своим адресом, чтобы не подменить программу
+    var main = url.pathname.endsWith('/') || url.pathname.endsWith('/index.html');
+    var key = main ? 'index.html' : req.url;
     e.respondWith(fetch(req).then(function (r) {
-      var copy = r.clone();
-      caches.open(CACHE).then(function (c) { c.put('index.html', copy) });
+      if (r.status === 200) { var copy = r.clone(); caches.open(CACHE).then(function (c) { c.put(key, copy) }) }
       return r;
-    }).catch(function () { return caches.match('index.html') }));
+    }).catch(function () { return caches.match(key).then(function (hit) { return hit || caches.match('index.html') }) }));
     return;
   }
   // остальное (рисунки, значки, шрифт) — из кэша, иначе из сети с сохранением
